@@ -2,8 +2,11 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// Database file path
-const dbPath = path.join(__dirname, '../scholarsedge.db');
+// Database file path (detect Vercel to use writable /tmp folder)
+const isVercel = process.env.VERCEL || process.env.NOW_BUILDER;
+const dbPath = isVercel 
+  ? '/tmp/scholarsedge.db'
+  : path.join(__dirname, '../scholarsedge.db');
 const db = new Database(dbPath, { verbose: null });
 
 // Enable foreign keys support in SQLite

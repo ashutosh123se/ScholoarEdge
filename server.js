@@ -4,8 +4,11 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure public uploads folder exists
-const uploadsDir = path.join(__dirname, 'public/uploads');
+// Ensure public uploads folder exists (use writable /tmp/uploads on Vercel)
+const isVercel = process.env.VERCEL || process.env.NOW_BUILDER;
+const uploadsDir = isVercel
+  ? '/tmp/uploads'
+  : path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -36,6 +39,9 @@ app.use(cookieParser());
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+if (isVercel) {
+  app.use('/uploads', express.static('/tmp/uploads'));
+}
 
 // Global cookie-flash renderer
 app.use(flashMessages);
@@ -74,23 +80,27 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Bind and Listen
-app.listen(PORT, () => {
-  const siteName = process.env.SITE_NAME || 'ScholarsEdge';
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@scholarsedge.in';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@Secure2024';
+// Bind and Listen (only run app.listen if not in Vercel environment)
+if (require.main === module || !isVercel) {
+  app.listen(PORT, () => {
+    const siteName = process.env.SITE_NAME || 'ScholarsEdge';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@scholarsedge.in';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@Secure2024';
 
-  console.log(`
-╔════════════════════════════════════════╗
-║     ${siteName.padEnd(20)} — Server Started    ║
-╠════════════════════════════════════════╣
-║  Local:   http://localhost:${PORT}        ║
-║  Admin:   http://localhost:${PORT}/admin  ║
-║  Mode:    ${process.env.NODE_ENV || 'development'}                  ║
-╚════════════════════════════════════════╝
+    console.log(`
+  ╔════════════════════════════════════════╗
+  ║     ${siteName.padEnd(20)} — Server Started    ║
+  ╠════════════════════════════════════════╣
+  ║  Local:   http://localhost:${PORT}        ║
+  ║  Admin:   http://localhost:${PORT}/admin  ║
+  ║  Mode:    ${process.env.NODE_ENV || 'development'}                  ║
+  ╚════════════════════════════════════════╝
 
-Default Admin Login:
-  Email:    ${adminEmail}
-  Password: ${adminPassword}
-  `);
-});
+  Default Admin Login:
+    Email:    ${adminEmail}
+    Password: ${adminPassword}
+    `);
+  });
+}
+
+module.exports = app;
