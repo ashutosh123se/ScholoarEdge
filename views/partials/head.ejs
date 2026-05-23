@@ -18,8 +18,13 @@
   <!-- Font Awesome 6 Free Icons CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   
-  <!-- Page Specific Custom Stylesheet -->
-  <link rel="stylesheet" href="/css/<%= typeof cssFile !== 'undefined' ? cssFile : 'main.css' %>">
+  <!-- Global Base Design System Stylesheet -->
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <!-- Page Specific Overrides Stylesheet -->
+  <% if (typeof cssFile !== 'undefined' && cssFile !== 'main.css') { %>
+    <link rel="stylesheet" href="/css/<%= cssFile %>">
+  <% } %>
   
   <!-- Optional Quill rich text editor core CSS (for user/admin dashboards containing blog compose views) -->
   <% if (typeof cssFile !== 'undefined' && (cssFile === 'dashboard.css' || cssFile === 'admin.css')) { %>
