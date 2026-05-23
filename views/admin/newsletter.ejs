@@ -1,0 +1,183 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Newsletter Subscribers</h1>
+        <div class="content-header-meta">Monitor journal digest subscriptions, export lists, and clean inactive email targets.</div>
+      </div>
+      <div>
+        <button id="export-csv-btn" class="btn btn-primary" style="padding: 0.5rem 1.25rem;"><i class="fa-solid fa-file-csv"></i> Export Subscribers</button>
+      </div>
+    </div>
+
+    <!-- Notification Toast Alerts -->
+    <%- include('../partials/flash') %>
+
+    <!-- Stats row -->
+    <div class="admin-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 2rem;">
+      <div class="admin-stat-card">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Total Subscriptions</div>
+            <div class="admin-stat-number"><%= totalCount %></div>
+          </div>
+          <i class="fa-solid fa-at"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card card-success">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Active Readers</div>
+            <div class="admin-stat-number" style="color: var(--success);"><%= activeCount %></div>
+          </div>
+          <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card card-warning">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Unsubscribed</div>
+            <div class="admin-stat-number" style="color: var(--warning);"><%= unsubscribedCount %></div>
+          </div>
+          <i class="fa-solid fa-circle-xmark" style="color: var(--warning);"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter/Search Bar -->
+    <div class="admin-filters-row" style="margin-bottom: 2rem;">
+      <div class="filter-group" style="max-width: 400px; flex-grow: 1;">
+        <label for="search-input">Instant Search Email</label>
+        <input type="text" id="search-input" placeholder="Type email keyword to search list..." oninput="filterEmailsList()">
+      </div>
+    </div>
+
+    <!-- Subscribers Table Card -->
+    <div class="dashboard-table-card">
+      <div class="table-responsive">
+        <table class="dash-table" id="newsletter-table">
+          <thead>
+            <tr>
+              <th>Subscriber Email</th>
+              <th>Subscribed Date</th>
+              <th>Status</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (subscribers && subscribers.length > 0) { %>
+              <% subscribers.forEach(sub => { %>
+                <tr class="subscriber-row">
+                  <td class="sub-email" style="font-weight: 600;"><%= sub.email %></td>
+                  <td style="font-size:0.85rem; color:var(--text-muted);">
+                    <%= new Date(sub.subscribed_at).toLocaleDateString() %> <%= new Date(sub.subscribed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %>
+                  </td>
+                  <td>
+                    <span class="status-badge <%= sub.active === 1 ? 'status-published' : 'status-pending' %>">
+                      <%= sub.active === 1 ? 'Active' : 'Unsubscribed' %>
+                    </span>
+                  </td>
+                  <td style="text-align: right;">
+                    <div class="action-buttons-cell" style="justify-content: flex-end;">
+                      <form action="/admin/newsletter/<%= sub.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="subscriber '<%= sub.email %>'" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <button type="submit" class="btn-admin-action btn-reject" title="Remove subscriber"><i class="fa-solid fa-trash-can"></i> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0;">No newsletter subscribers.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="pagination" style="margin-top: 2rem;">
+          <a href="/admin/newsletter?page=<%= currentPage - 1 %>" class="pagination-item <%= currentPage === 1 ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-left"></i></a>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="/admin/newsletter?page=<%= i %>" class="pagination-item <%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+          <% } %>
+          <a href="/admin/newsletter?page=<%= currentPage + 1 %>" class="pagination-item <%= currentPage === totalPages ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Subscription Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this email subscription</strong>? They will stop receiving automated publications digests. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Subscriber</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // Client-side instant filter of email listings
+  function filterEmailsList() {
+    const input = document.getElementById('search-input');
+    const filter = input.value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.subscriber-row');
+
+    rows.forEach(row => {
+      const email = row.querySelector('.sub-email').textContent.toLowerCase();
+      if (email.indexOf(filter) > -1) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  // Client-side CSV Exporter
+  document.getElementById('export-csv-btn').addEventListener('click', () => {
+    const table = document.getElementById('newsletter-table');
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const cols = row.querySelectorAll('td, th');
+      let rowData = [];
+      
+      // Exclude Actions column (last index)
+      for (let j = 0; j < cols.length - 1; j++) {
+        let text = cols[j].innerText.replace(/"/g, '""');
+        rowData.push(`"${text}"`);
+      }
+      if (rowData.length > 0) {
+        csv.push(rowData.join(','));
+      }
+    }
+    
+    const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `scholarsedge-subscribers-export-${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>

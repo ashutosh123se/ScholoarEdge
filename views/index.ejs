@@ -1,0 +1,313 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<!-- 1. Hero Section -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-content">
+      <h1>Accelerate Your <em>Academic Impact</em> with Expert Journal Care</h1>
+      <p>ScholarsEdge provides end-to-end PhD thesis mentoring, strategic Scopus and SCI journal publications, and professional data analysis support. Work with veteran peer reviewers to secure acceptance.</p>
+      
+      <div class="hero-actions">
+        <a href="/services" class="btn btn-primary"><i class="fa-solid fa-arrow-right-long"></i> Explore Services</a>
+        <a href="/contact" class="btn btn-ghost"><i class="fa-regular fa-calendar-check"></i> Book Consultation</a>
+      </div>
+      
+      <div class="social-proof">
+        <div class="avatar-stack">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Priya" alt="Dr. Priya avatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh" alt="Prof. Rajesh avatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Keith" alt="Dr. Keith avatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya" alt="Ananya avatar">
+        </div>
+        <span>Over <strong>1,450+</strong> researchers successfully indexed worldwide</span>
+      </div>
+    </div>
+    
+    <div class="hero-visual">
+      <div class="hero-card">
+        <h3>Our Publication Guarantee</h3>
+        <div class="hero-feature-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <div>
+            <strong>100% Peer-Reviewed Rigor</strong>
+            <p style="font-size: 0.85rem; color: var(--cream-dark); margin-top: 0.2rem;">All manuscripts undergo double-blind pre-review by editors before submission.</p>
+          </div>
+        </div>
+        <div class="hero-feature-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <div>
+            <strong>Verified Directory Integrity</strong>
+            <p style="font-size: 0.85rem; color: var(--cream-dark); margin-top: 0.2rem;">Zero predatory index warning. We target Scopus Q1/Q2 and top SCI indices.</p>
+          </div>
+        </div>
+        <div class="hero-feature-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <div>
+            <strong>Compliant Ethical Formatting</strong>
+            <p style="font-size: 0.85rem; color: var(--cream-dark); margin-top: 0.2rem;">Rigorous checks for Turnitin indexes, citations, and journal formatting standards.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Ticker Strip (Infinite Scroll) -->
+<div class="ticker-strip">
+  <div class="ticker-wrap">
+    <% services.forEach(s => { %>
+      <span class="ticker-item"><%= s.title %></span>
+    <% }) %>
+    <% services.forEach(s => { %>
+      <span class="ticker-item"><%= s.title %></span>
+    <% }) %>
+  </div>
+</div>
+
+<!-- 3. Stats Band -->
+<section class="stats-band">
+  <div class="container stats-grid">
+    <div class="stat-card">
+      <div class="stat-number" data-target="<%= stats.totalBlogs + 1420 %>" data-suffix="+">0</div>
+      <div class="stat-label">Total Publications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" data-target="15" data-suffix="+">0</div>
+      <div class="stat-label">Years Experience</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" data-target="98.4" data-suffix="%">0</div>
+      <div class="stat-label">Success Rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" data-target="100" data-suffix="%">0</div>
+      <div class="stat-label">Human Written / 0% AI</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Services Grid (3x2 Card Layout) -->
+<section class="services-section" id="services">
+  <div class="container">
+    <h2 class="section-title text-center">Comprehensive Academic Services</h2>
+    <p class="section-subtitle text-center">Professional, end-to-end guidance from literature framing to index publication.</p>
+    
+    <div class="services-grid">
+      <% services.forEach((service, index) => { %>
+        <!-- Mark 2nd service (Scopus) or 3rd as featured -->
+        <div class="service-card <%= index === 1 ? 'featured-card' : '' %>">
+          <% if (service.tag) { %>
+            <span class="service-tag"><%= service.tag %></span>
+          <% } %>
+          <div class="service-icon">
+            <i class="fa-solid <%= service.icon %>"></i>
+          </div>
+          <h3><%= service.title %></h3>
+          <p><%= service.description %></p>
+          <a href="/contact?service=<%= encodeURIComponent(service.title) %>" class="btn <%= index === 1 ? 'btn-ghost' : 'btn-secondary' %>" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; width: 100%;">Enquire Now</a>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Latest Blogs (3 Posts Cards) -->
+<section class="blog-section" style="background-color: var(--white);">
+  <div class="container">
+    <h2 class="section-title text-center">Academic Insights & Guides</h2>
+    <p class="section-subtitle text-center">Stay updated with research methodologies, citation styles, and publishing strategies.</p>
+    
+    <div class="blog-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 3.5rem;">
+      <% latestBlogs.forEach(blog => { %>
+        <article class="blog-card">
+          <div class="blog-cover">
+            <% if (blog.cover_image) { %>
+              <img src="<%= blog.cover_image %>" alt="<%= blog.title %> Cover" loading="lazy">
+            <% } else { %>
+              <div class="blog-cover-placeholder">
+                <%= blog.title.substring(0, 15) %>...
+              </div>
+            <% } %>
+            <span class="blog-cat-badge"><%= blog.category_name || 'Academic' %></span>
+          </div>
+          <div class="blog-card-content">
+            <h3><a href="/blog/<%= blog.slug %>"><%= blog.title %></a></h3>
+            <p class="blog-excerpt"><%= blog.excerpt %></p>
+            <div class="blog-meta-row">
+              <div class="blog-author">
+                <% if (blog.author_avatar) { %>
+                  <img src="<%= blog.author_avatar %>" alt="Author avatar">
+                <% } else { %>
+                  <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(blog.author_name) %>'" alt="Author avatar placeholder">
+                <% } %>
+                <span><%= blog.author_name %></span>
+              </div>
+              <div>
+                <i class="fa-regular fa-clock" style="margin-right: 3px;"></i> <%= blog.reading_time %> min read
+              </div>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+    
+    <div class="text-center">
+      <a href="/blog" class="btn btn-secondary">View All Posts <i class="fa-solid fa-arrow-right-long" style="margin-left: 5px;"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- 6. How It Works (5 Step Process) -->
+<section class="how-it-works">
+  <div class="container">
+    <h2 class="section-title text-center">Our Editorial & Submission Process</h2>
+    <p class="section-subtitle text-center">A rigorous workflow designed to yield publication-ready submissions.</p>
+    
+    <div class="process-steps">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <h4>Consultation</h4>
+        <p>Aligning research scope, timelines, and preferred journal targets.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <h4>Manuscript Audit</h4>
+        <p>Reviewing structure, plagiarism counts, and citation coverage.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <h4>Refining & Editing</h4>
+        <p>Correcting grammar, logical progression, and formatting layout.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <h4>Peer Pre-Review</h4>
+        <p>Mocks reviews by internal subject matter professors.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">05</div>
+        <h4>Journal Submit</h4>
+        <p>Submission and guidance on revision cycles until indexing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Why Us -->
+<section class="why-us">
+  <div class="container why-us-grid">
+    <div class="why-us-card">
+      <h3>Why Choose ScholarsEdge?</h3>
+      <p>We are a syndicate of active university professors, peer reviewers, and journal editors committed to supporting scientific communication.</p>
+      <div class="credential-pills">
+        <span class="credential-pill">ISO 9001:2015 Certified</span>
+        <span class="credential-pill">100% Confidentiality</span>
+        <span class="credential-pill">Plagiarism Zero Policy</span>
+        <span class="credential-pill">SCI/Scopus Experts</span>
+      </div>
+    </div>
+    
+    <div class="feature-points">
+      <div class="feature-point">
+        <div class="feature-point-icon">
+          <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <div class="feature-point-text">
+          <h4>Expert Editorial Board</h4>
+          <p>Your work is reviewed by native English editors holding PhDs in your specific domain.</p>
+        </div>
+      </div>
+      <div class="feature-point">
+        <div class="feature-point-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="feature-point-text">
+          <h4>Ethical Compliance Guarantee</h4>
+          <p>We adhere to COPE (Committee on Publication Ethics) principles. We do not falsify data or generate AI text.</p>
+        </div>
+      </div>
+      <div class="feature-point">
+        <div class="feature-point-icon">
+          <i class="fa-solid fa-arrows-spin"></i>
+        </div>
+        <div class="feature-point-text">
+          <h4>Support Till Indexing</h4>
+          <p>We do not exit after submission. We support revisions and editor responses until your paper goes live.</p>
+        </div>
+      </div>
+      <div class="feature-point">
+        <div class="feature-point-icon">
+          <i class="fa-solid fa-coins"></i>
+        </div>
+        <div class="feature-point-text">
+          <h4>Transparent Pricing</h4>
+          <p>No hidden revision fees. Flexible installments for PhD scholars and academic fellowships.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Testimonials -->
+<section class="testimonials">
+  <div class="container">
+    <h2 class="section-title text-center">What Our Scholars Say</h2>
+    <p class="section-subtitle text-center">Stories of successful journal publication journeys and PhD completions.</p>
+    
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-quote">
+          "The editorial team at ScholarsEdge was exceptional. They helped me clean up my methodology section and matched my paper with a Q2 Elsevier journal. It got accepted within 4 months!"
+        </div>
+        <div class="testimonial-user">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Priya" alt="Dr. Priya avatar">
+          <div>
+            <h4>Dr. Priya Sharma</h4>
+            <span>Assistant Professor, IIT Bombay</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="testimonial-card featured-testi">
+        <div class="testimonial-quote">
+          "I was struggling to write my thesis proposal. ScholarsEdge experts gave me structured feedback that transformed my literature review. Highly recommended for PhD candidates."
+        </div>
+        <div class="testimonial-user">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Sanjay" alt="Dr. Sanjay avatar">
+          <div>
+            <h4>Dr. Sanjay Nair</h4>
+            <span>PhD Graduate, IISc Bangalore</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="testimonial-card">
+        <div class="testimonial-quote">
+          "Their statistical data analysis services saved me weeks of coding in R. The regression models and structural equation modeling (SEM) they built were directly accepted by the reviewers."
+        </div>
+        <div class="testimonial-user">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Rebecca" alt="Dr. Rebecca avatar">
+          <div>
+            <h4>Dr. Rebecca Scott</h4>
+            <span>Medical Researcher, University of Delhi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Ready to Elevate Your Academic Publication Index?</h2>
+    <p>Schedule a confidential 1-on-1 manuscript critique call with one of our senior journal board members today.</p>
+    <div class="cta-buttons">
+      <a href="/contact" class="btn btn-primary"><i class="fa-solid fa-headset"></i> Book Free Consultation</a>
+      <a href="https://wa.me/<%= settings.whatsapp_number ? settings.whatsapp_number.replace(/[^0-9]/g, '') : '#' %>" target="_blank" class="btn btn-ghost" style="color: var(--white); border-color: var(--white);"><i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

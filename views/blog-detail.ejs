@@ -1,0 +1,165 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<!-- Blog Detail Header -->
+<div class="blog-detail-header">
+  <div class="blog-detail-header-bg">
+    <% if (blog.cover_image) { %>
+      <img src="<%= blog.cover_image %>" alt="<%= blog.title %> Cover">
+    <% } %>
+  </div>
+  <div class="container" style="position: relative; z-index: 10;">
+    <div style="margin-bottom: 1.5rem;">
+      <span class="badge" style="background-color: var(--gold); color: var(--navy);"><%= blog.category_name %></span>
+    </div>
+    <h1><%= blog.title %></h1>
+    <div class="blog-detail-meta">
+      <span>
+        <% if (blog.author_avatar) { %>
+          <img src="<%= blog.author_avatar %>" alt="Author avatar">
+        <% } else { %>
+          <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(blog.author_name) %>'" alt="Author placeholder">
+        <% } %>
+        <strong><%= blog.author_name %></strong>
+      </span>
+      <span><i class="fa-regular fa-calendar"></i> <%= new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+      <span><i class="fa-regular fa-clock"></i> <%= blog.reading_time %> min read</span>
+      <span><i class="fa-regular fa-eye"></i> <%= blog.views %> views</span>
+    </div>
+  </div>
+</div>
+
+<!-- Blog Detail Body -->
+<section class="blog-detail-body">
+  <div class="container">
+    <article class="prose">
+      <%- blog.content %>
+    </article>
+
+    <!-- Tag Cloud linking to tag lists -->
+    <% if (blog.tags) { %>
+      <div class="blog-detail-tags">
+        <strong>Tags:</strong>
+        <% blog.tags.split(',').forEach(t => { 
+          const cleanTag = t.trim();
+          if (cleanTag) { %>
+            <a href="/blog?tag=<%= encodeURIComponent(cleanTag) %>" class="tag-pill">#<%= cleanTag %></a>
+          <% }
+        }) %>
+      </div>
+    <% } %>
+
+    <!-- Author Biography Card -->
+    <div class="author-bio-card">
+      <div class="author-bio-avatar">
+        <% if (blog.author_avatar) { %>
+          <img src="<%= blog.author_avatar %>" alt="Author avatar">
+        <% } else { %>
+          <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(blog.author_name) %>'" alt="Author placeholder">
+        <% } %>
+      </div>
+      <div class="author-bio-content">
+        <h4><%= blog.author_name %></h4>
+        <div class="author-bio-designation"><%= blog.author_designation || 'Academic Author' %></div>
+        <p class="author-bio-text"><%= blog.author_bio || 'A dedicated researcher and contributor to scientific literature and peer reviews.' %></p>
+      </div>
+    </div>
+
+    <!-- Comments Moderation Section -->
+    <div class="comments-section" id="comments">
+      <h3 class="comments-title"><i class="fa-regular fa-comments"></i> Discussions (<%= comments.length %>)</h3>
+
+      <div class="comments-list">
+        <% if (comments && comments.length > 0) { %>
+          <% comments.forEach(comment => { %>
+            <div class="comment-card">
+              <div class="comment-header">
+                <div class="commenter-info">
+                  <% if (comment.commenter_avatar) { %>
+                    <img src="<%= comment.commenter_avatar %>" alt="Commenter avatar">
+                  <% } else { %>
+                    <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(comment.commenter_name) %>'" alt="Commenter avatar">
+                  <% } %>
+                  <div>
+                    <div class="commenter-name"><%= comment.commenter_name %></div>
+                    <div class="commenter-meta"><%= comment.commenter_designation || 'Scholar' %></div>
+                  </div>
+                </div>
+                <div class="comment-date">
+                  <%= new Date(comment.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %>
+                </div>
+              </div>
+              <div class="comment-text"><%= comment.content %></div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p style="color: var(--text-muted); font-style: italic; text-align: center; margin: 2rem 0;">No comments approved yet. Be the first to share your thoughts!</p>
+        <% } %>
+      </div>
+
+      <!-- Comment Submission Form -->
+      <div class="comment-form-container">
+        <h4>Leave a Comment</h4>
+        <% if (typeof user !== 'undefined' && user) { %>
+          <form action="/blog/<%= blog.slug %>/comment" method="POST">
+            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+            <div class="form-group">
+              <label for="content">Academic Comment</label>
+              <textarea name="content" id="content" class="form-control" placeholder="Write your professional feedback or query about this paper..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary">Submit for Moderation</button>
+          </form>
+        <% } else { %>
+          <div class="login-to-comment">
+            <p style="margin-bottom: 1rem;">You must be logged in to participate in academic discussions.</p>
+            <a href="/auth/login" class="btn btn-primary" style="padding: 0.5rem 1.5rem;">Log In to Comment</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Related Articles Band -->
+<% if (relatedBlogs && relatedBlogs.length > 0) { %>
+  <section class="related-posts">
+    <div class="container">
+      <h2 class="section-title text-center">Related Publications</h2>
+      <div class="related-grid">
+        <% relatedBlogs.forEach(rel => { %>
+          <article class="blog-card">
+            <div class="blog-cover">
+              <% if (rel.cover_image) { %>
+                <img src="<%= rel.cover_image %>" alt="<%= rel.title %> Cover" loading="lazy">
+              <% } else { %>
+                <div class="blog-cover-placeholder">
+                  <%= rel.title.substring(0, 15) %>...
+                </div>
+              <% } %>
+              <span class="blog-cat-badge"><%= rel.category_name || 'Academic' %></span>
+            </div>
+            <div class="blog-card-content">
+              <h3 style="font-size: 1.1rem;"><a href="/blog/<%= rel.slug %>"><%= rel.title %></a></h3>
+              <p class="blog-excerpt"><%= rel.excerpt %></p>
+              <div class="blog-meta-row">
+                <div class="blog-author">
+                  <% if (rel.author_avatar) { %>
+                    <img src="<%= rel.author_avatar %>" alt="Author avatar">
+                  <% } else { %>
+                    <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(rel.author_name) %>'" alt="Author placeholder">
+                  <% } %>
+                  <span><%= rel.author_name %></span>
+                </div>
+                <div>
+                  <i class="fa-regular fa-clock" style="margin-right: 3px;"></i> <%= rel.reading_time %> min read
+                </div>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+<% } %>
+
+<%- include('partials/footer') %>

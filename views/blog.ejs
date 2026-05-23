@@ -1,0 +1,161 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="blog-detail-header" style="padding: 4rem 0 3rem;">
+  <div class="container">
+    <h1>Academic Publications Blog</h1>
+    <p style="color: var(--gold-pale); max-width: 600px; margin: 0 auto;">Read professional guidelines, tips, and insights on PhD thesis writing and journal submissions.</p>
+  </div>
+</div>
+
+<section class="blog-section">
+  <div class="container blog-layout">
+    <!-- Left Column: Blog Grid & Pagination (70%) -->
+    <div>
+      <% if (blogs && blogs.length > 0) { %>
+        <div class="blog-grid">
+          <% blogs.forEach(blog => { %>
+            <article class="blog-card">
+              <div class="blog-cover">
+                <% if (blog.cover_image) { %>
+                  <img src="<%= blog.cover_image %>" alt="<%= blog.title %> Cover" loading="lazy">
+                <% } else { %>
+                  <div class="blog-cover-placeholder">
+                    <%= blog.title.substring(0, 20) %>...
+                  </div>
+                <% } %>
+                <span class="blog-cat-badge"><%= blog.category_name || 'Academic' %></span>
+              </div>
+              <div class="blog-card-content">
+                <h3><a href="/blog/<%= blog.slug %>"><%= blog.title %></a></h3>
+                <p class="blog-excerpt">
+                  <%= blog.excerpt ? blog.excerpt.substring(0, 150) : '' %><%= (blog.excerpt && blog.excerpt.length > 150) ? '...' : '' %>
+                </p>
+                <div class="blog-meta-row">
+                  <div class="blog-author">
+                    <% if (blog.author_avatar) { %>
+                      <img src="<%= blog.author_avatar %>" alt="Author avatar">
+                    <% } else { %>
+                      <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(blog.author_name) %>'" alt="Author avatar placeholder">
+                    <% } %>
+                    <span><%= blog.author_name %></span>
+                  </div>
+                  <div>
+                    <i class="fa-regular fa-clock" style="margin-right: 3px;"></i> <%= blog.reading_time %> min read
+                  </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                  <span><%= new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                  <span><i class="fa-regular fa-eye"></i> <%= blog.views %> views</span>
+                </div>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+
+        <!-- Pagination Controls -->
+        <% if (filters.totalPages > 1) { %>
+          <div class="pagination">
+            <a href="/blog?page=<%= filters.page - 1 %><%= filters.category ? '&category=' + filters.category : '' %><%= filters.search ? '&search=' + filters.search : '' %><%= filters.tag ? '&tag=' + filters.tag : '' %>" 
+               class="pagination-item <%= filters.page === 1 ? 'disabled' : '' %>" aria-label="Previous Page">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            
+            <% for (let i = 1; i <= filters.totalPages; i++) { %>
+              <a href="/blog?page=<%= i %><%= filters.category ? '&category=' + filters.category : '' %><%= filters.search ? '&search=' + filters.search : '' %><%= filters.tag ? '&tag=' + filters.tag : '' %>" 
+                 class="pagination-item <%= filters.page === i ? 'active' : '' %>">
+                <%= i %>
+              </a>
+            <% } %>
+
+            <a href="/blog?page=<%= filters.page + 1 %><%= filters.category ? '&category=' + filters.category : '' %><%= filters.search ? '&search=' + filters.search : '' %><%= filters.tag ? '&tag=' + filters.tag : '' %>" 
+               class="pagination-item <%= filters.page === filters.totalPages ? 'disabled' : '' %>" aria-label="Next Page">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state">
+          <i class="fa-regular fa-folder-open"></i>
+          <h3>No Articles Found</h3>
+          <p>We couldn't find any publications matching your search criteria. Try adjusting your filters.</p>
+          <a href="/blog" class="btn btn-secondary">Clear All Filters</a>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Right Column: Sidebar (30%) -->
+    <aside class="sidebar">
+      <!-- Widget 1: Search -->
+      <div class="sidebar-widget">
+        <h4>Search Articles</h4>
+        <form action="/blog" method="GET" class="search-box">
+          <input type="text" name="search" placeholder="Type keywords..." value="<%= filters.search %>" aria-label="Search keywords">
+          <% if (filters.category) { %><input type="hidden" name="category" value="<%= filters.category %>"><% } %>
+          <% if (filters.tag) { %><input type="hidden" name="tag" value="<%= filters.tag %>"><% } %>
+          <button type="submit" class="btn btn-secondary" style="padding: 0.75rem 1rem;" aria-label="Search Button"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+      </div>
+
+      <!-- Widget 2: Categories -->
+      <div class="sidebar-widget">
+        <h4>Categories</h4>
+        <ul class="category-list">
+          <li>
+            <a href="/blog<%= filters.search ? '?search=' + filters.search : '' %>" class="category-item" style="<%= !filters.category ? 'font-weight:700; color:var(--gold);' : '' %>">
+              All Publications <span>(Total)</span>
+            </a>
+          </li>
+          <% categories.forEach(cat => { %>
+            <li>
+              <a href="/blog?category=<%= cat.slug %><%= filters.search ? '&search=' + filters.search : '' %>" 
+                 class="category-item" 
+                 style="<%= filters.category === cat.slug ? 'font-weight:700; color:var(--gold);' : '' %>">
+                <%= cat.name %> <span>(<%= cat.post_count %>)</span>
+              </a>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+
+      <!-- Widget 3: Popular Tags -->
+      <% if (tagsCloud && tagsCloud.length > 0) { %>
+        <div class="sidebar-widget">
+          <h4>Popular Tags</h4>
+          <div class="tag-cloud">
+            <% tagsCloud.forEach(tag => { %>
+              <a href="/blog?tag=<%= tag.name %><%= filters.category ? '&category=' + filters.category : '' %><%= filters.search ? '&search=' + filters.search : '' %>" 
+                 class="tag-pill"
+                 style="<%= filters.tag === tag.name ? 'background-color:var(--gold); color:var(--navy); border-color:var(--gold);' : '' %>">
+                <%= tag.name %>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Widget 4: Featured Card -->
+      <% if (featuredBlog) { %>
+        <div class="sidebar-widget" style="padding: 0; overflow: hidden; background: var(--navy); color: var(--white); border-color: var(--border);">
+          <div style="height: 150px; background-color: var(--navy-mid); position: relative;">
+            <% if (featuredBlog.cover_image) { %>
+              <img src="<%= featuredBlog.cover_image %>" alt="<%= featuredBlog.title %> cover" style="width:100%; height:100%; object-fit:cover; opacity: 0.7;">
+            <% } else { %>
+              <div style="display:flex; align-items:center; justify-content:center; height:100%; font-family:'Playfair Display',serif; font-style:italic; color:var(--gold-pale);">Featured Article</div>
+            <% } %>
+            <span class="blog-cat-badge" style="background:var(--gold); color:var(--navy); top:10px; bottom:auto;">Editor's Pick</span>
+          </div>
+          <div style="padding: 1.5rem;">
+            <h4 style="color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 1.1rem; line-height: 1.4; margin-bottom: 0.5rem; padding-bottom: 0;"><%= featuredBlog.title %></h4>
+            <p style="font-size: 0.8rem; color: var(--cream-dark); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 1rem;"><%= featuredBlog.excerpt %></p>
+            <a href="/blog/<%= featuredBlog.slug %>" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem; width: 100%;">Read Article</a>
+          </div>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,47 @@
+<aside class="dashboard-sidebar">
+  <!-- Profile Summary -->
+  <div class="sidebar-profile">
+    <div class="sidebar-avatar">
+      <% if (user.avatar) { %>
+        <img src="<%= user.avatar %>" alt="<%= user.name %> avatar">
+      <% } else { %>
+        <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(user.name) %>'" alt="Default Avatar">
+      <% } %>
+    </div>
+    <div class="sidebar-profile-info">
+      <h4><%= user.name %></h4>
+      <span><%= user.designation || 'Author / Scholar' %></span>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <ul class="sidebar-menu">
+    <li class="sidebar-menu-item <%= typeof title !== 'undefined' && title === 'User Dashboard' ? 'active' : '' %>">
+      <a href="/dashboard"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+    </li>
+    <li class="sidebar-menu-item <%= typeof title !== 'undefined' && title === 'My Articles' ? 'active' : '' %>">
+      <a href="/dashboard/blogs">
+        <i class="fa-solid fa-newspaper"></i> My Blogs
+        <% if (typeof user.blog_count !== 'undefined' && user.blog_count > 0) { %>
+          <span class="sidebar-badge"><%= user.blog_count %></span>
+        <% } %>
+      </a>
+    </li>
+    <li class="sidebar-menu-item highlight-item <%= typeof title !== 'undefined' && title === 'Write New Article' ? 'active' : '' %>">
+      <a href="/dashboard/blogs/new"><i class="fa-solid fa-pen-to-square"></i> Write New Blog</a>
+    </li>
+    <li class="sidebar-menu-item <%= typeof title !== 'undefined' && title === 'Profile Settings' ? 'active' : '' %>">
+      <a href="/dashboard/profile"><i class="fa-solid fa-user-cog"></i> Profile Settings</a>
+    </li>
+    
+    <!-- Separator -->
+    <li style="margin: 1rem 0; border-top: 1px solid var(--border); list-style: none;"></li>
+    
+    <li class="sidebar-menu-item">
+      <a href="/"><i class="fa-solid fa-arrow-left"></i> Back to Site</a>
+    </li>
+    <li class="sidebar-menu-item">
+      <a href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </li>
+  </ul>
+</aside>

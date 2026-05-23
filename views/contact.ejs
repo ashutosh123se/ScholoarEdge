@@ -1,0 +1,110 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="blog-detail-header" style="padding: 4rem 0 3rem;">
+  <div class="container">
+    <h1>Contact Our Desk</h1>
+    <p style="color: var(--gold-pale); max-width: 600px; margin: 0 auto;">Connect with our editors for manuscript critiques or thesis consultation services.</p>
+  </div>
+</div>
+
+<section class="contact-section">
+  <div class="container contact-grid">
+    <!-- Contact Info Panel -->
+    <div class="contact-info-panel">
+      <h2>Confidential Consultation</h2>
+      <p>Have a draft manuscript or a pending thesis? Share your requirements with us. All enquiries are handled with strict privacy guarantees under non-disclosure agreements.</p>
+      
+      <div class="contact-method">
+        <div class="contact-method-icon">
+          <i class="fa-solid fa-phone"></i>
+        </div>
+        <div class="contact-method-text">
+          <h5>Phone Helpline</h5>
+          <p><%= settings.contact_phone %></p>
+        </div>
+      </div>
+
+      <div class="contact-method">
+        <div class="contact-method-icon">
+          <i class="fa-solid fa-envelope"></i>
+        </div>
+        <div class="contact-method-text">
+          <h5>Email Correspondence</h5>
+          <p><%= settings.contact_email %></p>
+        </div>
+      </div>
+
+      <div class="contact-method">
+        <div class="contact-method-icon">
+          <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <div class="contact-method-text">
+          <h5>Office Headquarters</h5>
+          <p><%= settings.contact_address %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form Card -->
+    <div class="contact-form-card">
+      <form action="/contact" method="POST">
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+        
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input type="text" name="name" id="name" class="form-control" placeholder="Dr. / Prof. / Mr. / Ms." required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Institutional Email *</label>
+          <input type="email" name="email" id="email" class="form-control" placeholder="you@university.edu" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number (with country code)</label>
+          <input type="tel" name="phone" id="phone" class="form-control" placeholder="+91 98765 43210">
+        </div>
+
+        <div class="form-group">
+          <label for="service">Interested Service</label>
+          <select name="service" id="service" class="form-control">
+            <option value="General Enquiry">Select a Service...</option>
+            <option value="PhD Thesis Writing">PhD Thesis Writing</option>
+            <option value="Scopus Publication">Scopus Publication</option>
+            <option value="SCI Journal Support">SCI Journal Support</option>
+            <option value="UGC Care Journals">UGC Care Journals</option>
+            <option value="Research Paper Writing">Research Paper Writing</option>
+            <option value="Data Analysis & Modeling">Data Analysis & Modeling</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Detailed Message *</label>
+          <textarea name="message" id="message" class="form-control" placeholder="Please outline your research topic, target journal index, and constraints..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="width: 100%;"><i class="fa-regular fa-paper-plane"></i> Send Consultation Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Inline script to select service if query param exists -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceParam = urlParams.get('service');
+    if (serviceParam) {
+      const select = document.getElementById('service');
+      for (let option of select.options) {
+        if (option.value === serviceParam) {
+          option.selected = true;
+          break;
+        }
+      }
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

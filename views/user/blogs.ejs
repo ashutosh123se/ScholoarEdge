@@ -1,0 +1,145 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <%- include('../partials/user-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="dashboard-content">
+    <div class="content-header">
+      <div>
+        <h1>My Publications</h1>
+        <div class="content-header-meta">Draft, submit, and track the status of your research articles.</div>
+      </div>
+      <a href="/dashboard/blogs/new" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose Article</a>
+    </div>
+
+    <!-- Notification flash messages -->
+    <%- include('../partials/flash') %>
+
+    <!-- Filter Tabs -->
+    <ul class="dashboard-tabs">
+      <li class="tab-item <%= activeTab === 'all' ? 'active' : '' %>">
+        <a href="/dashboard/blogs?status=all">All</a>
+      </li>
+      <li class="tab-item <%= activeTab === 'draft' ? 'active' : '' %>">
+        <a href="/dashboard/blogs?status=draft">Drafts</a>
+      </li>
+      <li class="tab-item <%= activeTab === 'pending' ? 'active' : '' %>">
+        <a href="/dashboard/blogs?status=pending">Pending Review</a>
+      </li>
+      <li class="tab-item <%= activeTab === 'published' ? 'active' : '' %>">
+        <a href="/dashboard/blogs?status=published">Published</a>
+      </li>
+      <li class="tab-item <%= activeTab === 'rejected' ? 'active' : '' %>">
+        <a href="/dashboard/blogs?status=rejected">Rejected</a>
+      </li>
+    </ul>
+
+    <!-- Blog Table Card -->
+    <div class="dashboard-table-card">
+      <% if (blogs && blogs.length > 0) { %>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Views</th>
+                <th>Updated</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% blogs.forEach(blog => { %>
+                <tr>
+                  <td style="width: 60px;">
+                    <% if (blog.cover_image) { %>
+                      <img src="<%= blog.cover_image %>" alt="<%= blog.title %> Cover" style="width: 50px; height: 35px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border);">
+                    <% } else { %>
+                      <div style="width: 50px; height: 35px; border-radius: var(--radius); background-color: var(--navy-mid); display:flex; align-items:center; justify-content:center; color: var(--gold-pale); font-size: 0.6rem; font-style:italic;">No Img</div>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; font-size: 0.95rem; max-width: 320px; word-wrap: break-word;">
+                      <%= blog.title %>
+                    </div>
+                    
+                    <!-- Inline Rejection Note -->
+                    <% if (blog.status === 'rejected' && blog.rejection_reason) { %>
+                      <div style="font-size: 0.8rem; color: var(--error); background-color: rgba(220, 38, 38, 0.05); border-left: 2px solid var(--error); padding: 0.4rem 0.6rem; border-radius: var(--radius); margin-top: 0.4rem; display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <i class="fa-solid fa-triangle-exclamation" style="margin-top: 0.1rem;"></i>
+                        <div>
+                          <strong>Editorial Feedback:</strong> <%= blog.rejection_reason %>
+                        </div>
+                      </div>
+                    <% } %>
+                  </td>
+                  <td><%= blog.category_name || 'Uncategorized' %></td>
+                  <td>
+                    <span class="status-badge status-<%= blog.status %>"><%= blog.status %></span>
+                  </td>
+                  <td><%= blog.views %></td>
+                  <td style="font-size: 0.8rem; color: var(--text-muted);">
+                    <%= new Date(blog.updated_at || blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                  </td>
+                  <td style="text-align: right;">
+                    <div class="table-actions" style="justify-content: flex-end;">
+                      <!-- Only edit/submit if Draft or Rejected -->
+                      <% if (blog.status === 'draft' || blog.status === 'rejected') { %>
+                        <a href="/dashboard/blogs/<%= blog.id %>/edit" class="btn-table-action" title="Edit Article"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <form action="/dashboard/blogs/<%= blog.id %>/submit" method="POST" style="display: inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-table-action" style="color: var(--success);" title="Submit for review"><i class="fa-solid fa-paper-plane"></i></button>
+                        </form>
+                      <% } else { %>
+                        <a href="/blog/<%= blog.slug %>" class="btn-table-action" title="Preview Live Article" target="_blank"><i class="fa-solid fa-eye"></i></a>
+                      <% } %>
+                      
+                      <!-- Delete is always allowed for authors -->
+                      <form action="/dashboard/blogs/<%= blog.id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this article draft? This cannot be undone.');">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <button type="submit" class="btn-table-action delete-action" title="Delete Draft"><i class="fa-solid fa-trash-can"></i></button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="pagination" style="margin-top: 2rem;">
+            <a href="/dashboard/blogs?status=<%= activeTab %>&page=<%= currentPage - 1 %>" class="pagination-item <%= currentPage === 1 ? 'disabled' : '' %>" aria-label="Previous Page">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/dashboard/blogs?status=<%= activeTab %>&page=<%= i %>" class="pagination-item <%= currentPage === i ? 'active' : '' %>">
+                <%= i %>
+              </a>
+            <% } %>
+            <a href="/dashboard/blogs?status=<%= activeTab %>&page=<%= currentPage + 1 %>" class="pagination-item <%= currentPage === totalPages ? 'disabled' : '' %>" aria-label="Next Page">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state">
+          <i class="fa-solid fa-folder-open"></i>
+          <h3>No Publications Found</h3>
+          <p>You do not have any manuscripts under the <strong><%= activeTab %></strong> tab.</p>
+          <a href="/dashboard/blogs/new" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose First Post</a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>

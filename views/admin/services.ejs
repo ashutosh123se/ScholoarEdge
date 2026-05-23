@@ -1,0 +1,170 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Academic Services CRUD</h1>
+        <div class="content-header-meta">Manage homepage service listings, order display items, and change active configurations.</div>
+      </div>
+    </div>
+
+    <!-- Notification Toast alerts -->
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: flex-start;">
+      
+      <!-- Services Grid (Left Column) -->
+      <div>
+        <div class="services-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <% services.forEach(service => { %>
+            <div class="service-card" style="background-color: var(--white); border-color: rgba(13,27,42,0.06); height: 100%; display: flex; flex-direction: column;">
+              <span class="service-tag" style="background: <%= service.active === 1 ? 'var(--gold)' : 'var(--cream-dark)' %>;">
+                <%= service.active === 1 ? 'Active' : 'Inactive' %>
+              </span>
+              
+              <div class="service-icon" style="background-color: rgba(13, 27, 42, 0.05); color: var(--gold);">
+                <i class="fa-solid <%= service.icon %>"></i>
+              </div>
+              
+              <h3><%= service.title %></h3>
+              <p style="flex-grow: 1; font-size: 0.85rem;"><%= service.description %></p>
+              
+              <!-- Badges details -->
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; border-top:1px dashed rgba(13,27,42,0.06); padding-top:0.5rem; display:flex; justify-content:space-between;">
+                <span>Display Order: <strong><%= service.display_order %></strong></span>
+                <span>Tag: <strong><%= service.tag || 'None' %></strong></span>
+              </div>
+
+              <!-- Controls Actions row -->
+              <div class="action-buttons-cell" style="margin-top: auto; border-top: 1px solid rgba(13,27,42,0.05); padding-top: 0.75rem;">
+                <!-- Expand edit row trigger -->
+                <button class="btn-admin-action btn-view" onclick="toggleEditRow(<%= service.id %>)"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                
+                <!-- Toggle active status -->
+                <form action="/admin/services/<%= service.id %>/toggle" method="POST" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                  <button type="submit" class="btn-admin-action <%= service.active === 1 ? 'btn-delete' : 'btn-approve' %>">
+                    <i class="fa-solid <%= service.active === 1 ? 'fa-eye-slash' : 'fa-eye' %>"></i>
+                    <%= service.active === 1 ? 'Hide' : 'Show' %>
+                  </button>
+                </form>
+
+                <!-- Delete Service -->
+                <form action="/admin/services/<%= service.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="service offering '<%= service.title %>'" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                  <button type="submit" class="btn-admin-action btn-reject"><i class="fa-solid fa-trash-can"></i></button>
+                </form>
+              </div>
+
+              <!-- Inline edit panel expanded row -->
+              <div id="edit-box-<%= service.id %>" class="rejection-box" style="margin-top: 1rem; text-align: left;">
+                <form action="/admin/services/<%= service.id %>" method="POST">
+                  <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                  
+                  <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size:0.75rem; font-weight:700;">Service Title</label>
+                    <input type="text" name="title" class="form-control" style="padding:0.4rem; font-size:0.85rem;" value="<%= service.title %>" required>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size:0.75rem; font-weight:700;">Description</label>
+                    <textarea name="description" class="form-control" style="padding:0.4rem; font-size:0.85rem; min-height: 80px;" required><%= service.description %></textarea>
+                  </div>
+
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom: 0.75rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label style="font-size:0.75rem; font-weight:700;">FontAwesome Icon</label>
+                      <input type="text" name="icon" class="form-control" style="padding:0.4rem; font-size:0.85rem;" value="<%= service.icon %>" placeholder="fa-graduation-cap" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label style="font-size:0.75rem; font-weight:700;">Tag Pill</label>
+                      <input type="text" name="tag" class="form-control" style="padding:0.4rem; font-size:0.85rem;" value="<%= service.tag || '' %>" placeholder="e.g. Popular">
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="font-size:0.75rem; font-weight:700;">Display Order (lower first)</label>
+                    <input type="number" name="display_order" class="form-control" style="padding:0.4rem; font-size:0.85rem;" value="<%= service.display_order %>">
+                  </div>
+
+                  <div style="display:flex; gap:0.5rem;">
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.8rem; flex-grow: 1;">Save Changes</button>
+                    <button type="button" class="btn btn-ghost" onclick="toggleEditRow(<%= service.id %>)" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Cancel</button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Add New Service Form Card (Right Column) -->
+      <div class="dashboard-table-card">
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(13,27,42,0.06); padding-bottom: 0.5rem;">Add New Service</h3>
+        
+        <form action="/admin/services" method="POST">
+          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+          <div class="form-group">
+            <label for="new-title">Service Title *</label>
+            <input type="text" name="title" id="new-title" class="form-control" placeholder="e.g. Plagiarism Proofreading" required>
+          </div>
+
+          <div class="form-group">
+            <label for="new-description">Description *</label>
+            <textarea name="description" id="new-description" class="form-control" placeholder="Detail the academic scope of this service..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="new-icon">FontAwesome Icon Class *</label>
+            <input type="text" name="icon" id="new-icon" class="form-control" placeholder="e.g. fa-shield-halved" required>
+            <span style="font-size:0.7rem; color:var(--text-muted);">See fa- icons lists. e.g. fa-graduation-cap, fa-flask, fa-chart-line</span>
+          </div>
+
+          <div class="form-group">
+            <label for="new-tag">Badge Tag (Optional)</label>
+            <input type="text" name="tag" id="new-tag" class="form-control" placeholder="e.g. New, Q1 Indexed, Fast-Track">
+          </div>
+
+          <div class="form-group">
+            <label for="new-order">Display Sequence Order</label>
+            <input type="number" name="display_order" id="new-order" class="form-control" value="0">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-plus"></i> Publish New Service</button>
+        </form>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Service Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this resource</strong>? It will immediately disappear from the homepage services grid. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Service</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  function toggleEditRow(id) {
+    const el = document.getElementById('edit-box-' + id);
+    if (el) {
+      el.classList.toggle('show');
+    }
+  }
+</script>

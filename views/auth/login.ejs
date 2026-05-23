@@ -1,0 +1,76 @@
+<%- include('../partials/head') %>
+
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="auth-logo">
+          <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
+        </a>
+        <h2>Welcome Back</h2>
+        <p>Log in to access your author/scholar control panel</p>
+      </div>
+
+      <!-- Server Flash Messages -->
+      <%- include('../partials/flash') %>
+
+      <form action="/auth/login" method="POST" class="auth-form">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+        <div class="form-group">
+          <label for="email">Institutional Email</label>
+          <input type="email" name="email" id="email" class="form-control" placeholder="you@university.edu" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
+            <button type="button" class="password-toggle-btn" id="password-toggle" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-options">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember">
+            Remember me
+          </label>
+          <a href="#" class="forgot-pwd-link" onclick="alert('Please contact your administrator at support@scholarsedge.in to reset your credentials.'); return false;">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-auth-submit">Log In to Dashboard</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <div class="auth-footer">
+        New here? <a href="/auth/register">Create an Account</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('password-toggle');
+      const passwordInput = document.getElementById('password');
+
+      if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+          const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+          passwordInput.setAttribute('type', type);
+          
+          const icon = toggleBtn.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Scholar Consultations Submissions</h1>
+        <div class="content-header-meta">Manage direct query entries, record replies, and view requested services.</div>
+      </div>
+      <% if (unreadCount > 0) { %>
+        <span class="sidebar-badge" style="background:var(--error); color:var(--white); font-size:0.9rem; padding:0.4rem 0.8rem; border-radius:50px;"><%= unreadCount %> Unread Queries</span>
+      <% } %>
+    </div>
+
+    <!-- Notification Toast Alerts -->
+    <%- include('../partials/flash') %>
+
+    <!-- Tabs filters -->
+    <ul class="dashboard-tabs">
+      <li class="tab-item <%= filters.status === 'unread' ? 'active' : '' %>">
+        <a href="/admin/contacts?status=unread">Unread</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'read' ? 'active' : '' %>">
+        <a href="/admin/contacts?status=read">Read</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'replied' ? 'active' : '' %>">
+        <a href="/admin/contacts?status=replied">Replied</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'all' ? 'active' : '' %>">
+        <a href="/admin/contacts?status=all">All Enquiries</a>
+      </li>
+    </ul>
+
+    <!-- Queries Card List -->
+    <div class="contacts-list">
+      <% if (contacts && contacts.length > 0) { %>
+        <% contacts.forEach(submission => { %>
+          <div class="contact-submission-card" id="card-<%= submission.id %>">
+            <div class="contact-card-header">
+              <div class="contact-user-details">
+                <h4><%= submission.name %></h4>
+                <div>
+                  <span><i class="fa-regular fa-envelope"></i> <a href="mailto:<%= submission.email %>" style="color:inherit;"><%= submission.email %></a></span>
+                  <% if (submission.phone) { %>
+                    <span><i class="fa-solid fa-phone"></i> <%= submission.phone %></span>
+                  <% } %>
+                  <span><i class="fa-solid fa-briefcase"></i> Service: <strong><%= submission.service %></strong></span>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <span class="status-badge <%= submission.status === 'unread' ? 'status-pending' : (submission.status === 'read' ? 'status-draft' : 'status-published') %>" style="text-transform:uppercase;">
+                  <%= submission.status %>
+                </span>
+                <span style="font-size:0.8rem; color:var(--text-muted);"><%= new Date(submission.created_at).toLocaleString() %></span>
+              </div>
+            </div>
+
+            <!-- Message content -->
+            <div class="contact-card-message">
+              <strong>Query Message:</strong>
+              <p style="margin-top: 0.5rem; line-height: 1.5; color: var(--text-dark); background-color: var(--cream); padding: 1rem; border-radius: var(--radius); border-left: 3px solid var(--gold);"><%= submission.message %></p>
+            </div>
+
+            <!-- Reply notes block -->
+            <% if (submission.status === 'replied') { %>
+              <div class="admin-reply-box">
+                <h5><i class="fa-solid fa-reply"></i> Admin Response Note</h5>
+                <p style="font-size: 0.9rem; color: var(--text-mid); margin-bottom: 0;"><%= submission.admin_note || 'No reply text logged.' %></p>
+              </div>
+            <% } %>
+
+            <!-- Action panel -->
+            <div class="action-buttons-cell" style="border-top:1px solid rgba(13,27,42,0.05); padding-top:0.75rem;">
+              <% if (submission.status === 'unread') { %>
+                <!-- Mark read AJAX trigger -->
+                <button type="button" class="btn-admin-action btn-approve btn-mark-read" data-id="<%= submission.id %>"><i class="fa-solid fa-envelope-open"></i> Mark as Read</button>
+              <% } %>
+
+              <!-- Reply input triggers drawer -->
+              <% if (submission.status !== 'replied') { %>
+                <button type="button" class="btn-admin-action btn-feature" onclick="toggleReplyBox(<%= submission.id %>)"><i class="fa-solid fa-reply"></i> Log Reply</button>
+              <% } %>
+
+              <!-- Delete query -->
+              <form action="/admin/contacts/<%= submission.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="contact inquiry from <%= submission.name %>" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                <button type="submit" class="btn-admin-action btn-reject"><i class="fa-solid fa-trash"></i> Delete Enquiry</button>
+              </form>
+            </div>
+
+            <!-- Reply Text Drawer -->
+            <div id="reply-box-<%= submission.id %>" class="rejection-box" style="margin-top:0;">
+              <form action="/admin/contacts/<%= submission.id %>/replied" method="POST">
+                <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:0.5rem;">Admin Correspondence Note</label>
+                <textarea name="admin_note" class="form-control" placeholder="E.g. Sent brochure and scheduled pricing proposal on 24 May..." required></textarea>
+                <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                  <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fa-regular fa-paper-plane"></i> Save Response Log</button>
+                  <button type="button" class="btn btn-ghost" onclick="toggleReplyBox(<%= submission.id %>)" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Cancel</button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        <% }) %>
+      <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state" style="background:var(--white); border-radius:var(--radius-lg); box-shadow:var(--shadow);">
+          <i class="fa-solid fa-envelope-open-text"></i>
+          <h3>All Queries Cleared</h3>
+          <p>No queries found under the <strong><%= filters.status %></strong> filter tab.</p>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (filters.totalPages > 1) { %>
+      <div class="pagination" style="margin-top: 2rem;">
+        <a href="/admin/contacts?page=<%= filters.page - 1 %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === 1 ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-left"></i></a>
+        <% for (let i = 1; i <= filters.totalPages; i++) { %>
+          <a href="/admin/contacts?page=<%= i %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === i ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+        <a href="/admin/contacts?page=<%= filters.page + 1 %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === filters.totalPages ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-right"></i></a>
+      </div>
+    <% } %>
+
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Query Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this enquiry</strong>? All records of this correspondence will be erased. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Record</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  function toggleReplyBox(id) {
+    const el = document.getElementById('reply-box-' + id);
+    if (el) {
+      el.classList.toggle('show');
+      if (el.classList.contains('show')) {
+        el.querySelector('textarea').focus();
+      }
+    }
+  }
+</script>

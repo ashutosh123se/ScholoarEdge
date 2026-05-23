@@ -1,0 +1,228 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div style="display:flex; align-items:center; gap: 1rem;">
+        <a href="/admin/users" class="editor-btn-back" title="Back to Users list" style="color:var(--text-dark); border-color:var(--border);">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h1>Scholar Profile Details</h1>
+          <div class="content-header-meta">Review author profile history, articles, comments, and security status.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications toast messages -->
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 2rem; align-items: flex-start; margin-bottom: 2.5rem;">
+      
+      <!-- User Profile Card (Left) -->
+      <div class="dashboard-table-card text-center" style="padding: 2.5rem 2rem;">
+        <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; border-radius: 50%; overflow: hidden; border: 3px solid var(--gold);">
+          <% if (profileUser.avatar) { %>
+            <img src="<%= profileUser.avatar %>" alt="<%= profileUser.name %> avatar" style="width:100%; height:100%; object-fit:cover;">
+          <% } else { %>
+            <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(profileUser.name) %>'" alt="Placeholder avatar" style="width:100%; height:100%; object-fit:cover;">
+          <% } %>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;"><%= profileUser.name %></h2>
+        <div style="font-size: 0.85rem; color: var(--gold); font-weight:700; text-transform:uppercase; margin-bottom: 1rem;"><%= profileUser.designation || 'Academic Researcher' %></div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;"><%= profileUser.email %></p>
+        
+        <div style="text-align: left; font-size: 0.85rem; background-color: var(--cream); padding: 1.5rem; border-radius: var(--radius); border-left: 3px solid var(--navy); margin-bottom: 2rem;">
+          <p style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Biography:</strong> <%= profileUser.bio || 'No biography written by user.' %></p>
+          <div style="display:flex; justify-content:space-between; margin-top: 1rem; border-top:1px dashed rgba(13,27,42,0.06); padding-top:0.75rem; color:var(--text-muted);">
+            <span>Role Permission:</span> <strong style="text-transform: uppercase;"><%= profileUser.role %></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top: 0.5rem; color:var(--text-muted);">
+            <span>Verified:</span> <strong><%= profileUser.email_verified === 1 ? 'Yes' : 'No' %></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top: 0.5rem; color:var(--text-muted);">
+            <span>Registered:</span> <strong><%= new Date(profileUser.created_at).toLocaleDateString() %></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top: 0.5rem; color:var(--text-muted);">
+            <span>Last login:</span> <strong><%= profileUser.last_login ? new Date(profileUser.last_login).toLocaleDateString() : 'Never' %></strong>
+          </div>
+        </div>
+
+        <!-- Action Controls -->
+        <% if (user.id !== profileUser.id) { %>
+          <div style="display:flex; flex-direction:column; gap: 0.75rem;">
+            <!-- Block Status Action -->
+            <form action="/admin/users/<%= profileUser.id %>/toggle-status" method="POST" style="width:100%;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn <%= profileUser.status === 'active' ? 'btn-secondary' : 'btn-primary' %>" style="width:100%;">
+                <i class="fa-solid <%= profileUser.status === 'active' ? 'fa-ban' : 'fa-check-circle' %>"></i>
+                <%= profileUser.status === 'active' ? 'Suspend Scholar Account' : 'Activate Scholar Account' %>
+              </button>
+            </form>
+
+            <!-- Toggle Permission Action -->
+            <form action="/admin/users/<%= profileUser.id %>/change-role" method="POST" style="width:100%;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn btn-ghost" style="width:100%;">
+                <i class="fa-solid fa-arrows-spin"></i>
+                Swap Permission to <%= profileUser.role === 'admin' ? 'Regular User' : 'System Admin' %>
+              </button>
+            </form>
+
+            <!-- Delete Cascade Account Action -->
+            <form action="/admin/users/<%= profileUser.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="user account of <%= profileUser.name %>" style="width:100%;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn btn-reject btn-auth-submit" style="background-color: var(--error); color:var(--white); border-color:var(--error); width:100%;">
+                <i class="fa-solid fa-trash-can"></i>
+                Delete Account (Cascade)
+              </button>
+            </form>
+          </div>
+        <% } else { %>
+          <p style="color: var(--text-muted); font-style: italic;">You cannot run controls on your own logged-in admin account.</p>
+        <% } %>
+      </div>
+
+      <!-- Activity log timeline audit (Right) -->
+      <div class="admin-list-panel" style="min-height: 520px;">
+        <h3>Scholar Activity Log Timeline</h3>
+        <div class="activity-log-container" style="max-height: 460px;">
+          <% if (timeline && timeline.length > 0) { %>
+            <% timeline.forEach(log => { %>
+              <div class="activity-item">
+                <div class="activity-item-content">
+                  <p><strong><%= log.action %></strong></p>
+                  <p><%= log.details.split(' | ')[0] %></p>
+                  <span class="activity-item-time"><%= new Date(log.created_at).toLocaleString() %></span>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p style="text-align: center; color: var(--text-muted); font-style: italic; margin-top: 3rem;">No activities logged for this scholar account.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blogs Table by this user -->
+    <div class="dashboard-table-card" style="margin-bottom: 2.5rem;">
+      <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-newspaper"></i> Manuscripts Written (<%= blogs.length %>)</h3>
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Views</th>
+              <th>Date</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (blogs && blogs.length > 0) { %>
+              <% blogs.forEach(blog => { %>
+                <tr>
+                  <td style="font-weight: 600;"><%= blog.title %></td>
+                  <td><%= blog.category_name || 'Uncategorized' %></td>
+                  <td>
+                    <span class="status-badge status-<%= blog.status %>"><%= blog.status %></span>
+                  </td>
+                  <td><%= blog.views %></td>
+                  <td><%= new Date(blog.created_at).toLocaleDateString() %></td>
+                  <td style="text-align: right;">
+                    <a href="/admin/blogs/<%= blog.id %>" class="btn-admin-action btn-view"><i class="fa-solid fa-eye"></i> Details</a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 1.5rem 0;">No articles written by this scholar.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Comments made by this user -->
+    <div class="dashboard-table-card">
+      <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-comments"></i> Discussion Comments (<%= comments.length %>)</h3>
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Comment Preview</th>
+              <th>Blog Title</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (comments && comments.length > 0) { %>
+              <% comments.forEach(comment => { %>
+                <tr>
+                  <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic;">
+                    "<%= comment.content %>"
+                  </td>
+                  <td>
+                    <a href="/blog/<%= comment.blog_slug %>" target="_blank" style="color: var(--gold); font-weight: 600;"><%= comment.blog_title.substring(0, 30) %>...</a>
+                  </td>
+                  <td>
+                    <span class="status-badge <%= comment.status === 'approved' ? 'status-published' : (comment.status === 'pending' ? 'status-pending' : 'status-rejected') %>">
+                      <%= comment.status %>
+                    </span>
+                  </td>
+                  <td><%= new Date(comment.created_at).toLocaleDateString() %></td>
+                  <td style="text-align: right;">
+                    <div class="action-buttons-cell" style="justify-content: flex-end;">
+                      <% if (comment.status === 'pending') { %>
+                        <form action="/admin/comments/<%= comment.id %>/approve" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-approve"><i class="fa-solid fa-check"></i> Accept</button>
+                        </form>
+                        <form action="/admin/comments/<%= comment.id %>/reject" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-reject"><i class="fa-solid fa-xmark"></i> Reject</button>
+                        </form>
+                      <% } %>
+                      <form action="/admin/comments/<%= comment.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this comment permanently?');">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <button type="submit" class="btn-admin-action btn-reject"><i class="fa-solid fa-trash-can"></i> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 1.5rem 0;">No comments submitted by this scholar.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Cascade Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this scholar account</strong>? This action cascades to delete all blogs, drafts, and comments. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

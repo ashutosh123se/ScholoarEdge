@@ -1,0 +1,108 @@
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <!-- Col 1: Brand Info -->
+      <div class="footer-col footer-about">
+        <a href="/" class="logo" style="margin-bottom: 1rem; display: inline-flex;">
+          <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
+        </a>
+        <p>Premium peer-reviewed academic services empowering PhD candidates, university scholars, and medical researchers to successfully publish in Scopus, SCI, and UGC Care journals.</p>
+        <div class="social-links">
+          <a href="<%= typeof settings !== 'undefined' && settings.facebook_url ? settings.facebook_url : '#' %>" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook Link">
+            <i class="fa-brands fa-facebook-f"></i>
+          </a>
+          <a href="<%= typeof settings !== 'undefined' && settings.twitter_url ? settings.twitter_url : '#' %>" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Twitter Link">
+            <i class="fa-brands fa-x-twitter"></i>
+          </a>
+          <a href="<%= typeof settings !== 'undefined' && settings.linkedin_url ? settings.linkedin_url : '#' %>" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn Link">
+            <i class="fa-brands fa-linkedin-in"></i>
+          </a>
+          <a href="https://wa.me/<%= typeof settings !== 'undefined' && settings.whatsapp_number ? settings.whatsapp_number.replace(/[^0-9]/g, '') : '#' %>" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="WhatsApp Link">
+            <i class="fa-brands fa-whatsapp"></i>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Col 2: Services -->
+      <div class="footer-col">
+        <h5>Our Services</h5>
+        <ul class="footer-links">
+          <li><a href="/services"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> PhD Thesis Writing</a></li>
+          <li><a href="/services"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Scopus Journal Support</a></li>
+          <li><a href="/services"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> SCI Publication Care</a></li>
+          <li><a href="/services"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Research Methodology</a></li>
+          <li><a href="/services"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Empirical Data Analysis</a></li>
+        </ul>
+      </div>
+      
+      <!-- Col 3: Quick Links -->
+      <div class="footer-col">
+        <h5>Quick Links</h5>
+        <ul class="footer-links">
+          <li><a href="/blog"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Publications Blog</a></li>
+          <li><a href="/contact"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Support Desk</a></li>
+          <li><a href="/auth/login"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Author Dashboard</a></li>
+          <li><a href="/auth/register"><i class="fa-solid fa-angle-right" style="font-size:0.75rem; margin-right:5px;"></i> Join as Reviewer</a></li>
+        </ul>
+      </div>
+      
+      <!-- Col 4: Contact & Newsletter -->
+      <div class="footer-col">
+        <h5>Subscribe & Support</h5>
+        <ul class="footer-contact-info" style="margin-bottom: 1.5rem;">
+          <li>
+            <i class="fa-solid fa-envelope"></i>
+            <span><%= typeof settings !== 'undefined' && settings.contact_email ? settings.contact_email : 'support@scholarsedge.in' %></span>
+          </li>
+          <li>
+            <i class="fa-solid fa-phone"></i>
+            <span><%= typeof settings !== 'undefined' && settings.contact_phone ? settings.contact_phone : '+91 98765 43210' %></span>
+          </li>
+        </ul>
+        <p style="font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--cream-dark);">Join our academic digest:</p>
+        <form id="newsletter-form" class="newsletter-form">
+          <input type="email" placeholder="Your institutional email" required aria-label="Newsletter email">
+          <button type="submit" aria-label="Subscribe button">Join</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <div>
+        &copy; 2026 ScholarsEdge. All academic rights reserved.
+      </div>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+        <a href="#">Editorial Guidelines</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast Notifications wrapper -->
+<div class="flash-container">
+  <%- include('flash') %>
+</div>
+
+<!-- Main Script -->
+<script src="/js/main.js"></script>
+
+<!-- Conditional scripts for editor or charts -->
+<% if (typeof cssFile !== 'undefined' && cssFile === 'dashboard.css') { %>
+  <!-- Quill Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
+  <!-- Custom Editor JS -->
+  <script src="/js/editor.js"></script>
+<% } %>
+
+<% if (typeof cssFile !== 'undefined' && cssFile === 'admin.css') { %>
+  <!-- Chart.js Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Admin JS -->
+  <script src="/js/admin.js"></script>
+<% } %>
+
+</body>
+</html>

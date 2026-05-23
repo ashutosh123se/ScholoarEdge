@@ -1,0 +1,209 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content" style="padding: 2rem;">
+    <!-- Back Header -->
+    <div class="content-header" style="margin-bottom: 2rem;">
+      <div style="display:flex; align-items:center; gap: 1rem;">
+        <a href="/admin/blogs" class="editor-btn-back" title="Back to blogs queue" style="color:var(--text-dark); border-color:var(--border);">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h1>Manuscript Verification Review</h1>
+          <div class="content-header-meta">Preview draft formatting, verify tags, and review editorial feedback options.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Toast alerts -->
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: flex-start;">
+      <!-- Left: Article Full Preview (Looks exactly as public site) -->
+      <div>
+        <div class="blog-detail-header" style="padding: 3rem 0; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 2rem;">
+          <div class="blog-detail-header-bg">
+            <% if (blog.cover_image) { %>
+              <img src="<%= blog.cover_image %>" alt="<%= blog.title %> Cover" style="opacity: 0.25;">
+            <% } %>
+          </div>
+          <div class="container" style="position:relative; z-index: 10; text-align: left; padding: 0 2rem;">
+            <span class="badge" style="background-color: var(--gold); color: var(--navy); margin-bottom: 1rem;"><%= blog.category_name %></span>
+            <h1 style="font-size: 2.25rem; margin-bottom: 1rem; color:var(--white);"><%= blog.title %></h1>
+            <div class="blog-detail-meta" style="justify-content: flex-start;">
+              <span><strong><%= blog.author_name %></strong></span>
+              <span><i class="fa-regular fa-clock"></i> <%= blog.reading_time %> min read</span>
+              <span><i class="fa-regular fa-eye"></i> <%= blog.views %> views</span>
+              <span><i class="fa-solid fa-circle-notch"></i> Status: <strong style="text-transform: uppercase;"><%= blog.status %></strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable content area -->
+        <div class="dashboard-table-card" style="padding: 3rem 2rem;">
+          <article class="prose" style="max-width: 100%;">
+            <%- blog.content %>
+          </article>
+        </div>
+      </div>
+
+      <!-- Right: Actions Panel & Details -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Author Info Widget -->
+        <div class="admin-list-panel">
+          <h3>Author Scholar Info</h3>
+          <div style="display:flex; align-items:center; gap:1rem; margin-bottom: 1rem;">
+            <% if (blog.author_avatar) { %>
+              <img src="<%= blog.author_avatar %>" alt="Author avatar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold);">
+            <% } else { %>
+              <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(blog.author_name) %>'" alt="Placeholder avatar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+            <% } %>
+            <div>
+              <h4 style="font-size: 1rem; margin-bottom: 0.1rem;"><%= blog.author_name %></h4>
+              <p style="font-size: 0.75rem; color: var(--gold); font-weight:700; text-transform:uppercase; margin-bottom:0;"><%= blog.author_designation || 'Scholar Researcher' %></p>
+            </div>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-mid); line-height: 1.4;"><%= blog.author_bio || 'No biography written by user.' %></p>
+        </div>
+
+        <!-- Metadata Info Widget -->
+        <div class="admin-list-panel">
+          <h3>Manuscript Metadata</h3>
+          <div style="font-size:0.85rem; display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Index Category:</span>
+              <strong><%= blog.category_name || 'Uncategorized' %></strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Word count check:</span>
+              <strong><%= blog.content.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length %> words</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Date Created:</span>
+              <strong><%= new Date(blog.created_at).toLocaleDateString() %></strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Date Submitted:</span>
+              <strong><%= blog.updated_at ? new Date(blog.updated_at).toLocaleDateString() : new Date(blog.created_at).toLocaleDateString() %></strong>
+            </div>
+            <div>
+              <span style="color:var(--text-muted); display:block; margin-bottom: 0.25rem;">Meta tags list:</span>
+              <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
+                <% if (blog.tags) { %>
+                  <% blog.tags.split(',').forEach(t => { %>
+                    <span class="tag-pill" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">#<%= t.trim() %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">No metadata tags.</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Administrative Moderation Board Actions -->
+        <div class="admin-list-panel">
+          <h3>Review Action Desk</h3>
+          
+          <div style="display:flex; flex-direction:column; gap: 0.75rem;">
+            <% if (blog.status === 'pending') { %>
+              <!-- Approve form -->
+              <form action="/admin/blogs/<%= blog.id %>/approve" method="POST" style="width: 100%;">
+                <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-circle-check"></i> Approve & Publish Paper</button>
+              </form>
+
+              <!-- Inline rejection form opener -->
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('reject-form-area').classList.toggle('show');" style="width:100%; background-color: var(--error); border-color:var(--error);"><i class="fa-solid fa-ban"></i> Decline & Return Draft</button>
+              
+              <!-- Rejection Drawer -->
+              <div class="rejection-box" id="reject-form-area">
+                <form action="/admin/blogs/<%= blog.id %>/reject" method="POST">
+                  <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                  <textarea name="rejection_reason" placeholder="Explain the reasons (formatting style errors, similarity threshold warnings, or logical gaps)..." required minlength="10"></textarea>
+                  <button type="submit" class="btn btn-secondary" style="background-color: var(--error); border-color: var(--error); font-size: 0.75rem; padding:0.4rem 1rem; width:100%;">Decline Manuscript</button>
+                </form>
+              </div>
+            <% } else { %>
+              <div style="font-size: 0.85rem; padding: 0.75rem; text-align:center; border: 1px dashed var(--border); border-radius: var(--radius); background-color: rgba(13,27,42,0.02); margin-bottom: 0.5rem;">
+                Moderation completed. Status: <strong style="text-transform:uppercase; color: var(--gold);"><%= blog.status %></strong>
+              </div>
+            <% } %>
+
+            <!-- Feature Flag Toggle -->
+            <form action="/admin/blogs/<%= blog.id %>/feature" method="POST" style="width:100%;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn btn-ghost" style="width:100%;">
+                <i class="fa-solid <%= blog.featured === 1 ? 'fa-star' : 'fa-star-half' %>" style="<%= blog.featured === 1 ? 'color: var(--gold);' : '' %>"></i>
+                <%= blog.featured === 1 ? 'Unfeature Editor\'s Pick' : 'Mark as Editor\'s Pick' %>
+              </button>
+            </form>
+
+            <!-- Delete Cascading Article -->
+            <form action="/admin/blogs/<%= blog.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="blog manuscript '<%= blog.title %>'" style="width:100%;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn btn-reject btn-auth-submit" style="background-color: #4b5563; border-color:#4b5563; color:var(--white); width:100%;"><i class="fa-solid fa-trash-can"></i> Delete Permanently</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Blog Comments Moderation list -->
+        <div class="admin-list-panel">
+          <h3>Article Comments Moderation</h3>
+          <div style="display:flex; flex-direction:column; gap: 0.75rem;">
+            <% if (comments && comments.length > 0) { %>
+              <% comments.forEach(comm => { %>
+                <div style="font-size:0.8rem; border-bottom: 1px dashed rgba(13,27,42,0.06); padding-bottom: 0.5rem;">
+                  <div style="display:flex; justify-content:space-between; margin-bottom: 0.25rem;">
+                    <strong><%= comm.commenter_name %></strong>
+                    <span class="status-badge <%= comm.status === 'approved' ? 'status-published' : (comm.status === 'pending' ? 'status-pending' : 'status-rejected') %>" style="font-size: 0.65rem;"><%= comm.status %></span>
+                  </div>
+                  <p style="color:var(--text-mid); font-style:italic; margin-bottom:0.4rem;">"<%= comm.content %>"</p>
+                  <div class="action-buttons-cell">
+                    <% if (comm.status === 'pending') { %>
+                      <form action="/admin/comments/<%= comm.id %>/approve" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <button type="submit" class="btn-admin-action btn-approve" style="font-size:0.65rem; padding: 0.2rem 0.4rem;">Accept</button>
+                      </form>
+                      <form action="/admin/comments/<%= comm.id %>/reject" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <button type="submit" class="btn-admin-action btn-reject" style="font-size:0.65rem; padding: 0.2rem 0.4rem;">Decline</button>
+                      </form>
+                    <% } %>
+                    <form action="/admin/comments/<%= comm.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this comment?');">
+                      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                      <button type="submit" class="btn-admin-action btn-delete" style="font-size:0.65rem; padding: 0.2rem 0.4rem;"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p style="font-size:0.75rem; color:var(--text-muted); font-style:italic; text-align:center;">No comments posted on this article.</p>
+            <% } %>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Article Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this resource</strong>? This cascades to delete all comments associated with it. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Article</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

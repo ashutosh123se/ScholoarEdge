@@ -1,0 +1,205 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Users Management</h1>
+        <div class="content-header-meta">Monitor registered scholars, update user permissions, and handle bans.</div>
+      </div>
+      <div>
+        <button id="export-csv-btn" class="btn btn-primary" style="padding: 0.5rem 1.25rem;"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Notification Toast Alerts -->
+    <%- include('../partials/flash') %>
+
+    <!-- Search & Filters Row -->
+    <form action="/admin/users" method="GET" class="admin-filters-row">
+      <div class="filter-group">
+        <label for="search">Search Scholar</label>
+        <input type="text" name="search" id="search" placeholder="Search by name or email..." value="<%= filters.search %>">
+      </div>
+
+      <div class="filter-group">
+        <label for="role">Role Permission</label>
+        <select name="role" id="role">
+          <option value="">All Roles</option>
+          <option value="user" <%= filters.role === 'user' ? 'selected' : '' %>>User</option>
+          <option value="admin" <%= filters.role === 'admin' ? 'selected' : '' %>>Admin</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="status">Account Status</label>
+        <select name="status" id="status">
+          <option value="">All Statuses</option>
+          <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+          <option value="banned" <%= filters.status === 'banned' ? 'selected' : '' %>>Banned</option>
+        </select>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-secondary" style="padding: 0.6rem 1.5rem;"><i class="fa-solid fa-filter"></i> Apply Filters</button>
+        <a href="/admin/users" class="btn btn-ghost" style="padding: 0.6rem 1.5rem;">Reset</a>
+      </div>
+    </form>
+
+    <!-- Users Data Table Card -->
+    <div class="dashboard-table-card">
+      <div class="table-responsive">
+        <table class="dash-table" id="users-table">
+          <thead>
+            <tr>
+              <th>Avatar</th>
+              <th>Name & Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Last Login</th>
+              <th>Blogs</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (users && users.length > 0) { %>
+              <% users.forEach(profileUser => { %>
+                <tr>
+                  <td style="width: 50px;">
+                    <% if (profileUser.avatar) { %>
+                      <img src="<%= profileUser.avatar %>" alt="<%= profileUser.name %> avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">
+                    <% } else { %>
+                      <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(profileUser.name) %>'" alt="Default Avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                    <% } %>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600;"><%= profileUser.name %></div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);"><%= profileUser.email %></div>
+                  </td>
+                  <td>
+                    <span class="status-badge" style="text-transform: uppercase; font-weight:700; font-size:0.7rem; background-color: <%= profileUser.role === 'admin' ? 'var(--gold-pale)' : 'var(--cream-dark)' %>; color: var(--navy);">
+                      <%= profileUser.role %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge status-<%= profileUser.status %>"><%= profileUser.status %></span>
+                  </td>
+                  <td style="font-size: 0.8rem; color: var(--text-muted);">
+                    <%= new Date(profileUser.created_at).toLocaleDateString() %>
+                  </td>
+                  <td style="font-size: 0.8rem; color: var(--text-muted);">
+                    <%= profileUser.last_login ? new Date(profileUser.last_login).toLocaleDateString() + ' ' + new Date(profileUser.last_login).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Never' %>
+                  </td>
+                  <td style="font-weight: 700; text-align: center;"><%= profileUser.blog_count %></td>
+                  <td style="text-align: right;">
+                    <div class="action-buttons-cell" style="justify-content: flex-end;">
+                      <a href="/admin/users/<%= profileUser.id %>" class="btn-admin-action btn-view" title="View details"><i class="fa-solid fa-eye"></i> Details</a>
+                      
+                      <% if (user.id !== profileUser.id) { %>
+                        <!-- Toggle status button -->
+                        <form action="/admin/users/<%= profileUser.id %>/toggle-status" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-feature" title="Toggle status block">
+                            <i class="fa-solid <%= profileUser.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
+                            <%= profileUser.status === 'active' ? 'Suspend' : 'Activate' %>
+                          </button>
+                        </form>
+
+                        <!-- Change Role button -->
+                        <form action="/admin/users/<%= profileUser.id %>/change-role" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-view" title="Toggle Admin Role">
+                            <i class="fa-solid fa-arrows-spin"></i>
+                            Role
+                          </button>
+                        </form>
+
+                        <!-- Delete User (Cascade) -->
+                        <form action="/admin/users/<%= profileUser.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="user account of <%= profileUser.name %> (Cascades all blogs/comments)" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-reject" title="Delete account"><i class="fa-solid fa-trash-can"></i> Delete</button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0;">No scholars found matching the filters.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (filters.totalPages > 1) { %>
+        <div class="pagination" style="margin-top: 2rem;">
+          <a href="/admin/users?page=<%= filters.page - 1 %>&search=<%= filters.search %>&role=<%= filters.role %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === 1 ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-left"></i></a>
+          <% for (let i = 1; i <= filters.totalPages; i++) { %>
+            <a href="/admin/users?page=<%= i %>&search=<%= filters.search %>&role=<%= filters.role %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === i ? 'active' : '' %>"><i class="fa-solid fa-chevron-right"></i> <%= i %></a>
+          <% } %>
+          <a href="/admin/users?page=<%= filters.page + 1 %>&search=<%= filters.search %>&role=<%= filters.role %>&status=<%= filters.status %>" class="pagination-item <%= filters.page === filters.totalPages ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Cascade Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this resource</strong>? This action cascades to delete all blogs, drafts, and comments. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // Exporter CSV client-side
+  document.getElementById('export-csv-btn').addEventListener('click', () => {
+    const table = document.getElementById('users-table');
+    let csv = [];
+    // Select all rows
+    const rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const cols = row.querySelectorAll('td, th');
+      let rowData = [];
+      
+      // Exclude Actions column (index 7)
+      for (let j = 1; j < cols.length - 1; j++) {
+        let text = cols[j].innerText.replace(/"/g, '""');
+        // Clean double lines or wraps
+        text = text.replace(/\n/g, ' | ');
+        rowData.push(`"${text}"`);
+      }
+      if (rowData.length > 0) {
+        csv.push(rowData.join(','));
+      }
+    }
+    
+    // Create CSV download
+    const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `scholarsedge-users-export-${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>

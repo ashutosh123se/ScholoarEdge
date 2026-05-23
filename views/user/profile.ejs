@@ -1,0 +1,232 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <%- include('../partials/user-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="dashboard-content">
+    <div class="content-header">
+      <div>
+        <h1>Profile Settings</h1>
+        <div class="content-header-meta">Update your scholar details and account security.</div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Messages -->
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: flex-start;">
+      
+      <!-- Profile Details Form Card -->
+      <div class="dashboard-table-card">
+        <h3 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(13,27,42,0.06); padding-bottom: 0.75rem;"><i class="fa-regular fa-id-card"></i> Scholar Bio</h3>
+        
+        <form action="/dashboard/profile" method="POST" enctype="multipart/form-data" id="profile-form">
+          <!-- CSRF Token -->
+          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+          <!-- Interactive Avatar Upload -->
+          <div class="form-group text-center">
+            <label style="margin-bottom: 0.75rem;">Profile Image</label>
+            <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-input').click();">
+              <% if (profile.avatar) { %>
+                <img src="<%= profile.avatar %>" id="avatar-preview" alt="User avatar">
+              <% } else { %>
+                <img src="/uploads/avatar-placeholder.png" id="avatar-preview" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(profile.name) %>'" alt="Default Avatar">
+              <% } %>
+              <div class="avatar-upload-overlay">
+                <i class="fa-solid fa-camera" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                <span>Upload Image</span>
+              </div>
+            </div>
+            <!-- Hidden avatar input -->
+            <input type="file" name="avatar" id="avatar-input" style="display: none;" accept="image/*" onchange="handleAvatarPreview(this)">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: -1rem;">Click to upload (JPG, PNG or WEBP under 5MB)</p>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" name="name" id="name" class="form-control" value="<%= profile.name %>" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Institutional Email (Read Only)</label>
+            <input type="email" id="email" class="form-control" value="<%= profile.email %>" disabled style="background-color: var(--cream-dark); cursor: not-allowed; opacity: 0.8;">
+          </div>
+
+          <div class="form-group">
+            <label for="designation">Academic Designation</label>
+            <input type="text" name="designation" id="designation" class="form-control" value="<%= profile.designation || '' %>" placeholder="e.g. PhD Scholar, IIT Delhi">
+          </div>
+
+          <div class="form-group" style="position: relative;">
+            <label for="bio">Biography / Research Background</label>
+            <textarea name="bio" id="bio" class="form-control" maxlength="300" style="min-height: 100px;" placeholder="Briefly outline your research focus, fields of interest..."><%= profile.bio || '' %></textarea>
+            <span id="bio-counter" style="position: absolute; right: 0; bottom: -20px; font-size: 0.75rem; color: var(--text-muted);">0/300</span>
+          </div>
+
+          <button type="submit" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%;"><i class="fa-regular fa-circle-check"></i> Save Profile Details</button>
+        </form>
+      </div>
+
+      <!-- Security & Password Change Card -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <div class="dashboard-table-card">
+          <h3 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(13,27,42,0.06); padding-bottom: 0.75rem; color: var(--navy-light);"><i class="fa-solid fa-shield-halved"></i> Account Security</h3>
+          
+          <!-- Shared form context (we will use another form for password changes) -->
+          <form action="/dashboard/profile" method="POST" id="password-form">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+            <!-- Carry details to satisfy backend validations on name -->
+            <input type="hidden" name="name" value="<%= profile.name %>">
+
+            <div class="form-group">
+              <label for="current_password">Current Password</label>
+              <input type="password" name="current_password" id="current_password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <div class="form-group">
+              <label for="new_password">New Password</label>
+              <div class="password-input-wrapper">
+                <input type="password" name="new_password" id="new_password" class="form-control" placeholder="••••••••" required>
+              </div>
+              
+              <!-- Strength meter bar -->
+              <div class="strength-meter" id="profile-strength-meter" style="margin-top: 8px;">
+                <div class="strength-bar" id="p-bar-1"></div>
+                <div class="strength-bar" id="p-bar-2"></div>
+                <div class="strength-bar" id="p-bar-3"></div>
+                <div class="strength-bar" id="p-bar-4"></div>
+              </div>
+              <span class="strength-text" id="profile-strength-text" style="color: var(--text-muted);">Strength: Not Evaluated</span>
+            </div>
+
+            <div class="form-group">
+              <label for="confirm_new_password">Confirm New Password</label>
+              <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-lock"></i> Change Password</button>
+          </form>
+        </div>
+
+        <!-- Account Info Statistics Card -->
+        <div class="dashboard-table-card" style="padding: 1.5rem; background-color: var(--navy); color: var(--white); border-color: var(--border);">
+          <h4 style="color: var(--white); margin-bottom: 1rem; font-size: 1.05rem;">Account Information</h4>
+          <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color: var(--gold-pale);">Member Since:</span>
+              <strong><%= new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color: var(--gold-pale);">Role Permission:</span>
+              <strong style="text-transform: uppercase;"><%= profile.role %></strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--gold-pale);">Verification:</span>
+              <strong>
+                <% if (profile.email_verified === 1) { %>
+                  <span class="status-badge status-published">Verified</span>
+                <% } else { %>
+                  <span class="status-badge status-pending">Pending</span>
+                <% } %>
+              </strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--gold-pale);">Status Account:</span>
+              <strong style="text-transform: uppercase;"><%= profile.status %></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // JavaScript to handle Avatar Preview on the fly
+  function handleAvatarPreview(input) {
+    if (input.files && input.files[0]) {
+      if (!input.files[0].type.startsWith('image/')) {
+        alert('Please choose a valid image file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('avatar-preview').src = e.target.result;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Bio Text Character Counter
+    const bioText = document.getElementById('bio');
+    const bioCounter = document.getElementById('bio-counter');
+    if (bioText && bioCounter) {
+      bioText.addEventListener('input', () => {
+        bioCounter.textContent = `${bioText.value.length}/300`;
+      });
+      bioCounter.textContent = `${bioText.value.length}/300`;
+    }
+
+    // Password strength check on profile change password form
+    const pwd = document.getElementById('new_password');
+    const cpwd = document.getElementById('confirm_new_password');
+    const pForm = document.getElementById('password-form');
+    const strengthText = document.getElementById('profile-strength-text');
+    const bars = [
+      document.getElementById('p-bar-1'),
+      document.getElementById('p-bar-2'),
+      document.getElementById('p-bar-3'),
+      document.getElementById('p-bar-4')
+    ];
+
+    if (pwd) {
+      pwd.addEventListener('input', () => {
+        const val = pwd.value;
+        let score = 0;
+
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[a-z]/.test(val) && /[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        bars.forEach(b => b.className = 'strength-bar');
+
+        if (val.length === 0) {
+          strengthText.textContent = 'Strength: Not Evaluated';
+          strengthText.style.color = 'var(--text-muted)';
+        } else if (score === 1) {
+          bars[0].classList.add('weak');
+          strengthText.textContent = 'Strength: Weak';
+          strengthText.style.color = 'var(--error)';
+        } else if (score === 2) {
+          bars[0].classList.add('medium');
+          bars[1].classList.add('medium');
+          strengthText.textContent = 'Strength: Medium';
+          strengthText.style.color = 'var(--warning)';
+        } else if (score >= 3) {
+          bars.forEach(b => b.classList.add('strong'));
+          strengthText.textContent = 'Strength: Strong';
+          strengthText.style.color = 'var(--success)';
+        }
+      });
+    }
+
+    if (pForm) {
+      pForm.addEventListener('submit', (e) => {
+        if (pwd.value !== cpwd.value) {
+          e.preventDefault();
+          alert('Confirm password does not match with the new password!');
+        }
+      });
+    }
+  });
+</script>

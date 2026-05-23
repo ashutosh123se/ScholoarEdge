@@ -1,0 +1,202 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <%- include('../partials/user-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="dashboard-content">
+    <!-- Welcome Header -->
+    <div class="content-header">
+      <div>
+        <% 
+          const hr = new Date().getHours(); 
+          let greeting = 'Good morning'; 
+          if (hr >= 12 && hr < 17) greeting = 'Good afternoon'; 
+          else if (hr >= 17) greeting = 'Good evening'; 
+        %>
+        <h1><%= greeting %>, <%= user.name %>! ✨</h1>
+        <div class="content-header-meta">
+          Here is what is happening with your academic drafts today.
+        </div>
+      </div>
+      <div class="content-header-meta text-right" style="font-weight: 600; font-size: 0.95rem;">
+        <i class="fa-regular fa-calendar"></i> <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) %>
+      </div>
+    </div>
+
+    <!-- Server Notification Toasts -->
+    <%- include('../partials/flash') %>
+
+    <% 
+      const totalBlogs = stats.draft + stats.pending + stats.published + stats.rejected;
+      const draftPct = totalBlogs > 0 ? (stats.draft / totalBlogs) * 100 : 0;
+      const pendingPct = totalBlogs > 0 ? (stats.pending / totalBlogs) * 100 : 0;
+      const publishedPct = totalBlogs > 0 ? (stats.published / totalBlogs) * 100 : 0;
+      const rejectedPct = totalBlogs > 0 ? (stats.rejected / totalBlogs) * 100 : 0;
+    %>
+
+    <!-- Stats Cards Grid -->
+    <div class="dashboard-stats-grid">
+      <div class="dash-stat-card">
+        <div class="dash-stat-info">
+          <p>Total Articles</p>
+          <h3><%= totalBlogs %></h3>
+        </div>
+        <div class="dash-stat-icon">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-info">
+          <p>Published</p>
+          <h3><%= stats.published %></h3>
+        </div>
+        <div class="dash-stat-icon" style="color: var(--success); background-color: rgba(22, 163, 74, 0.1);">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-info">
+          <p>Pending Review</p>
+          <h3><%= stats.pending %></h3>
+        </div>
+        <div class="dash-stat-icon" style="color: var(--warning); background-color: rgba(217, 119, 6, 0.1);">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-info">
+          <p>Total Views</p>
+          <h3><%= totalViews %></h3>
+        </div>
+        <div class="dash-stat-icon" style="color: var(--navy-light); background-color: var(--cream-dark);">
+          <i class="fa-regular fa-eye"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blog Status Proportion Breakdown -->
+    <div class="dashboard-chart-card">
+      <h3>Article Submission Ratios</h3>
+      <div class="status-breakdown-bar">
+        <div class="status-bar-segment segment-published" style="width: <%= publishedPct %>%" title="Published: <%= stats.published %>"></div>
+        <div class="status-bar-segment segment-pending" style="width: <%= pendingPct %>%" title="Pending: <%= stats.pending %>"></div>
+        <div class="status-bar-segment segment-draft" style="width: <%= draftPct %>%" title="Draft: <%= stats.draft %>"></div>
+        <div class="status-bar-segment segment-rejected" style="width: <%= rejectedPct %>%" title="Rejected: <%= stats.rejected %>"></div>
+      </div>
+      
+      <div class="status-legend">
+        <div class="legend-item">
+          <div class="legend-color segment-published"></div>
+          <span>Published (<%= stats.published %>)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color segment-pending"></div>
+          <span>Pending (<%= stats.pending %>)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color segment-draft"></div>
+          <span>Drafts (<%= stats.draft %>)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color segment-rejected"></div>
+          <span>Rejected (<%= stats.rejected %>)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Drafts and Comments Tables Split -->
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem;">
+      
+      <!-- Recent Blogs Table -->
+      <div class="dashboard-table-card">
+        <div class="table-header-row">
+          <h3>Recent Manuscripts</h3>
+          <a href="/dashboard/blogs" style="font-size: 0.85rem; color: var(--gold); font-weight: 700;">View All</a>
+        </div>
+        <div class="table-responsive">
+          <% if (recentBlogs && recentBlogs.length > 0) { %>
+            <table class="dash-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Views</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentBlogs.forEach(blog => { %>
+                  <tr>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;">
+                      <a href="<%= blog.status === 'published' ? '/blog/' + blog.slug : '/blog/' + blog.slug %>" style="color: inherit;"><%= blog.title %></a>
+                    </td>
+                    <td>
+                      <span class="status-badge status-<%= blog.status %>"><%= blog.status %></span>
+                    </td>
+                    <td><%= blog.views %></td>
+                    <td style="text-align: right;">
+                      <div class="table-actions" style="justify-content: flex-end;">
+                        <% if (blog.status === 'draft' || blog.status === 'rejected') { %>
+                          <a href="/dashboard/blogs/<%= blog.id %>/edit" class="btn-table-action" title="Edit Article"><i class="fa-solid fa-pen-to-square"></i></a>
+                          <form action="/dashboard/blogs/<%= blog.id %>/submit" method="POST" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                            <button type="submit" class="btn-table-action" style="color: var(--success);" title="Submit for review"><i class="fa-solid fa-paper-plane"></i></button>
+                          </form>
+                        <% } else { %>
+                          <a href="/blog/<%= blog.slug %>" class="btn-table-action" title="Preview Article" target="_blank"><i class="fa-solid fa-eye"></i></a>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <p style="text-align: center; color: var(--text-muted); font-style: italic; margin-top: 1.5rem;">No drafts created yet. Click "Write New Blog" to get started.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Right Column: Recent Comments & Quick Actions -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <!-- Quick Actions Card -->
+        <div class="dashboard-table-card" style="padding: 1.5rem;">
+          <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem;">Quick Panel</h3>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="/dashboard/blogs/new" class="btn btn-primary" style="text-align: center; justify-content: center;"><i class="fa-solid fa-pen-to-square"></i> Write New Article</a>
+            <a href="/dashboard/profile" class="btn btn-secondary" style="text-align: center; justify-content: center;"><i class="fa-solid fa-user-cog"></i> Profile Settings</a>
+          </div>
+        </div>
+
+        <!-- Recent comments -->
+        <div class="dashboard-table-card" style="padding: 1.5rem;">
+          <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem;">Discussions Feed</h3>
+          <% if (recentComments && recentComments.length > 0) { %>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <% recentComments.forEach(comm => { %>
+                <div style="font-size: 0.85rem; border-bottom: 1px dashed rgba(13,27,42,0.06); padding-bottom: 0.75rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <strong><%= comm.commenter_name %></strong>
+                    <span style="color: var(--text-muted); font-size: 0.75rem;"><%= new Date(comm.created_at).toLocaleDateString() %></span>
+                  </div>
+                  <div style="color: var(--text-mid); font-style: italic; margin-bottom: 0.25rem;">"<%= comm.content.substring(0, 50) %><%= comm.content.length > 50 ? '...' : '' %>"</div>
+                  <div style="font-size: 0.75rem; color: var(--gold); font-weight: 600;">On: <a href="/blog/<%= comm.blog_slug %>" target="_blank"><%= comm.blog_title.substring(0, 30) %>...</a></div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p style="font-style: italic; color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-top: 1rem;">No feedback comments posted yet.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>

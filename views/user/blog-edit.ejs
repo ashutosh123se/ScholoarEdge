@@ -1,0 +1,133 @@
+<%- include('../partials/head') %>
+
+<!-- Top Navigation Action Bar -->
+<div class="editor-top-bar">
+  <div class="editor-title-group">
+    <a href="/dashboard/blogs" class="editor-btn-back" title="Back to Blogs Dashboard">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h2>Edit Manuscript</h2>
+  </div>
+  
+  <div class="editor-actions">
+    <button type="button" class="btn btn-ghost" onclick="submitBlogForm('save')" style="border-color: rgba(255,255,255,0.4); color: var(--white);"><i class="fa-regular fa-floppy-disk"></i> Save Draft</button>
+    <button type="button" class="btn btn-primary" onclick="submitBlogForm('submit')"><i class="fa-solid fa-paper-plane"></i> Submit for Review</button>
+  </div>
+</div>
+
+<div class="dashboard-container" style="min-height: calc(100vh - 68px - 60px);">
+  <!-- Sidebar -->
+  <%- include('../partials/user-sidebar') %>
+
+  <!-- Main Workspaces Form -->
+  <main style="background: var(--white); width: 100%;">
+    <form action="/dashboard/blogs/<%= blog.id %>" method="POST" id="blog-form" enctype="multipart/form-data" data-user-id="<%= user.id %>" data-blog-id="<%= blog.id %>" class="editor-main-container">
+      <!-- CSRF Token -->
+      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+      <!-- Hidden Action Field -->
+      <input type="hidden" name="action" id="action-field" value="save">
+
+      <!-- Left Workspaces Area (Rich Text) -->
+      <div class="editor-workspace">
+        <!-- Rejection Message Banner -->
+        <% if (blog.status === 'rejected' && blog.rejection_reason) { %>
+          <div style="background-color: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.2); border-left: 4px solid var(--error); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 2rem;">
+            <h4 style="color: var(--error); font-family: 'DM Sans', sans-serif; font-size: 1rem; margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-xmark"></i> Manuscript Rejection Notice</h4>
+            <p style="font-size: 0.9rem; color: var(--text-dark); margin-bottom: 0; line-height: 1.4;"><%= blog.rejection_reason %></p>
+          </div>
+        <% } %>
+
+        <%- include('../partials/flash') %>
+
+        <!-- Title Block -->
+        <div class="form-group" style="position: relative;">
+          <input type="text" name="title" id="title" class="editor-title-input" placeholder="Enter article title..." maxlength="120" value="<%= blog.title %>" required autocomplete="off">
+          <span id="title-counter" style="position: absolute; right: 0; bottom: -18px; font-size: 0.75rem; color: var(--text-muted);">0/120</span>
+        </div>
+
+        <!-- Meta Summary Excerpt Block -->
+        <div class="form-group" style="position: relative; margin-top: 1.5rem;">
+          <textarea name="excerpt" id="excerpt" class="editor-excerpt-area" placeholder="Enter summary excerpt (max 200 chars)..." maxlength="200"><%= blog.excerpt %></textarea>
+          <span id="excerpt-counter" style="position: absolute; right: 0; bottom: -12px; font-size: 0.75rem; color: var(--text-muted);">0/200</span>
+        </div>
+
+        <!-- Quill editor interface -->
+        <div class="form-group" style="margin-top: 1.5rem;">
+          <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Manuscript Body</label>
+          <div id="editor-container"></div>
+          <!-- Hidden input synced by editor.js -->
+          <input type="hidden" name="content" id="hidden-content" value="<%= blog.content %>">
+        </div>
+
+        <!-- Words counts -->
+        <div style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid rgba(13,27,42,0.05); padding-top: 1rem; margin-top: 1rem;">
+          Word count: <strong id="word-count" style="color: var(--text-dark);">0</strong> words.
+        </div>
+      </div>
+
+      <!-- Right Config Panel Sidebar -->
+      <div class="editor-sidebar">
+        <!-- Cover Upload zone -->
+        <div class="editor-widget">
+          <h4>Cover Image</h4>
+          <input type="file" name="cover_image" id="cover_image" style="display: none;" accept="image/*">
+          <div class="upload-zone" id="upload-zone">
+            <i class="fa-regular fa-image"></i>
+            <p>Drag & drop cover banner or click to replace</p>
+            <% if (blog.cover_image) { %>
+              <img src="<%= blog.cover_image %>" id="upload-preview" class="upload-preview" alt="Current Cover">
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Categories Dropdown selection -->
+        <div class="editor-widget">
+          <h4>Category</h4>
+          <div class="form-group" style="margin-bottom: 0;">
+            <select name="category_id" id="category_id" class="form-control" required style="background:var(--white);">
+              <option value="">Select Category...</option>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>" <%= blog.category_id === cat.id ? 'selected' : '' %>><%= cat.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tag pills generator widget -->
+        <div class="editor-widget">
+          <h4>Metadata Tags</h4>
+          <div class="tags-input-container" id="tags-list-container">
+            <input type="text" id="tags-input" placeholder="Type tag & press enter..." aria-label="Tags input">
+          </div>
+          <!-- Hidden Tags field synchronized by editor.js -->
+          <input type="hidden" name="tags" id="hidden-tags" value="<%= blog.tags %>">
+          <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">Separate tags with commas or press enter.</p>
+        </div>
+
+        <!-- Review Warning terms -->
+        <div class="editor-widget" style="background-color: rgba(201,168,76,0.05); border-color: var(--border);">
+          <i class="fa-solid fa-circle-info" style="color: var(--gold); margin-bottom: 8px;"></i>
+          <p style="font-size: 0.75rem; color: var(--text-mid); margin-bottom: 0; line-height: 1.4;">
+            Updating a rejected manuscript will return it to draft status, allowing you to resubmit it for review after completing edits.
+          </p>
+        </div>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Footer Scripts helper -->
+<%- include('../partials/footer') %>
+
+<script>
+  function submitBlogForm(actionType) {
+    const actionField = document.getElementById('action-field');
+    const form = document.getElementById('blog-form');
+    if (actionField && form) {
+      actionField.value = actionType;
+      if (form.reportValidity()) {
+        form.submit();
+      }
+    }
+  }
+</script>

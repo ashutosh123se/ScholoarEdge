@@ -1,0 +1,60 @@
+<header class="header">
+  <div class="container nav-container">
+    <!-- Logo -->
+    <a href="/" class="logo">
+      <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
+    </a>
+    
+    <!-- Navigation Links -->
+    <ul class="nav-menu">
+      <li>
+        <a href="/" class="nav-link <%= typeof title !== 'undefined' && title === 'Home' ? 'active' : '' %>">Home</a>
+      </li>
+      <li>
+        <a href="/blog" class="nav-link <%= typeof title !== 'undefined' && (title === 'Publications Blog' || title.includes('Review') || (typeof blog !== 'undefined' && title === blog.title)) ? 'active' : '' %>">Blog</a>
+      </li>
+      <li>
+        <a href="/services" class="nav-link <%= typeof title !== 'undefined' && title === 'Our Services' ? 'active' : '' %>">Services</a>
+      </li>
+      <li>
+        <a href="/contact" class="nav-link <%= typeof title !== 'undefined' && title === 'Contact Us' ? 'active' : '' %>">Contact</a>
+      </li>
+    </ul>
+    
+    <!-- Right Actions: User Profile or Login CTA -->
+    <div class="nav-actions">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <!-- Logged In User Dropdown -->
+        <div class="user-dropdown">
+          <div class="dropdown-trigger">
+            <% if (user.avatar) { %>
+              <img src="<%= user.avatar %>" alt="<%= user.name %> avatar">
+            <% } else { %>
+              <img src="/uploads/avatar-placeholder.png" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(user.name) %>'" alt="Default Avatar">
+            <% } %>
+            <span><%= user.name.split(' ')[0] %></span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem;"></i>
+          </div>
+          <ul class="dropdown-menu">
+            <% if (user.role === 'admin') { %>
+              <li><a href="/admin"><i class="fa-solid fa-gauge-high"></i> Admin Panel</a></li>
+            <% } else { %>
+              <li><a href="/dashboard"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+            <% } %>
+            <li><a href="/dashboard/profile"><i class="fa-solid fa-user-cog"></i> Profile</a></li>
+            <li><a href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+          </ul>
+        </div>
+      <% } else { %>
+        <!-- Guest CTAs -->
+        <a href="/auth/login" class="btn btn-ghost" style="padding: 0.5rem 1.25rem;">Login</a>
+        <a href="/auth/register" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">Get Started</a>
+      <% } %>
+    </div>
+    
+    <!-- Mobile Hamburger Toggle -->
+    <button class="hamburger" aria-label="Toggle Navigation menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+</header>

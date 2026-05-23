@@ -1,0 +1,272 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Content Moderation Queue</h1>
+        <div class="content-header-meta">Verify research article drafts, manage reviewer comments, and feature publications.</div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Alerts -->
+    <%- include('../partials/flash') %>
+
+    <!-- Filter Tabs (reusing view for comments moderation too) -->
+    <ul class="dashboard-tabs">
+      <li class="tab-item <%= filters.status === 'pending' ? 'active' : '' %>">
+        <a href="/admin/blogs?status=pending">Pending Review 
+          <% if (pendingCount > 0) { %>
+            <span class="sidebar-badge" style="background:var(--warning); color:var(--white);"><%= pendingCount %></span>
+          <% } %>
+        </a>
+      </li>
+      <li class="tab-item <%= filters.status === 'published' ? 'active' : '' %>">
+        <a href="/admin/blogs?status=published">Published</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'draft' ? 'active' : '' %>">
+        <a href="/admin/blogs?status=draft">Drafts</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'rejected' ? 'active' : '' %>">
+        <a href="/admin/blogs?status=rejected">Rejected</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'all' ? 'active' : '' %>">
+        <a href="/admin/blogs?status=all">All Blogs</a>
+      </li>
+      <li class="tab-item <%= filters.status === 'comments' ? 'active' : '' %>">
+        <a href="/admin/comments" style="color: var(--gold);">Comments Moderation
+          <% if (pendingCommentsCount > 0) { %>
+            <span class="sidebar-badge" style="background:var(--warning); color:var(--white);"><%= pendingCommentsCount %></span>
+          <% } %>
+        </a>
+      </li>
+    </ul>
+
+    <% if (filters.status === 'comments') { %>
+      <!-- COMMENTS MODERATION QUEUE VIEW -->
+      <div class="dashboard-table-card">
+        <h3>Pending Review Comments</h3>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Author</th>
+                <th>Comment Content</th>
+                <th>Target Article</th>
+                <th>Date Submitted</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (typeof commentsList !== 'undefined' && commentsList.length > 0) { %>
+                <% commentsList.forEach(comm => { %>
+                  <tr>
+                    <td>
+                      <div style="font-weight: 600;"><%= comm.commenter_name %></div>
+                      <div style="font-size:0.75rem; color:var(--text-muted);"><%= comm.commenter_designation || 'Scholar' %></div>
+                    </td>
+                    <td style="max-width: 320px; font-style: italic; font-size: 0.9rem;">
+                      "<%= comm.content %>"
+                    </td>
+                    <td>
+                      <a href="/blog/<%= comm.blog_slug %>" target="_blank" style="color:var(--gold); font-weight:700;"><%= comm.blog_title %></a>
+                    </td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);"><%= new Date(comm.created_at).toLocaleDateString() %></td>
+                    <td style="text-align: right;">
+                      <div class="action-buttons-cell" style="justify-content: flex-end;">
+                        <form action="/admin/comments/<%= comm.id %>/approve" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-approve"><i class="fa-solid fa-check"></i> Accept</button>
+                        </form>
+                        <form action="/admin/comments/<%= comm.id %>/reject" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-reject"><i class="fa-solid fa-xmark"></i> Decline</button>
+                        </form>
+                        <form action="/admin/comments/<%= comm.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this comment permanently?');">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-delete"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0;">No comments pending moderation.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    <% } else { %>
+      <!-- BLOGS QUEUE VIEW -->
+      <!-- Search & Filters Row -->
+      <form action="/admin/blogs" method="GET" class="admin-filters-row">
+        <input type="hidden" name="status" value="<%= filters.status %>">
+        
+        <div class="filter-group">
+          <label for="search">Title / Keyword</label>
+          <input type="text" name="search" id="search" placeholder="Search by paper title..." value="<%= filters.search %>">
+        </div>
+
+        <div class="filter-group">
+          <label for="category">Category</label>
+          <select name="category" id="category">
+            <option value="">All Categories</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat.slug %>" <%= filters.category === cat.slug ? 'selected' : '' %>><%= cat.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-secondary" style="padding: 0.6rem 1.5rem;"><i class="fa-solid fa-filter"></i> Filter</button>
+          <a href="/admin/blogs?status=<%= filters.status %>" class="btn btn-ghost" style="padding: 0.6rem 1.5rem;">Reset</a>
+        </div>
+      </form>
+
+      <!-- Blogs Table Card -->
+      <div class="dashboard-table-card">
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Cover</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Views</th>
+                <th>Date</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (blogs && blogs.length > 0) { %>
+                <% blogs.forEach(blog => { %>
+                  <!-- Normal Blog Row -->
+                  <tr>
+                    <td style="width: 50px;">
+                      <% if (blog.cover_image) { %>
+                        <img src="<%= blog.cover_image %>" alt="<%= blog.title %> thumbnail" style="width: 48px; height: 32px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border);">
+                      <% } else { %>
+                        <div style="width: 48px; height: 32px; border-radius: var(--radius); background-color: var(--navy-mid); display:flex; align-items:center; justify-content:center; color: var(--gold-pale); font-size: 0.6rem; font-style:italic;">No Cover</div>
+                      <% } %>
+                    </td>
+                    <td>
+                      <div style="font-weight: 600; max-width: 250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <a href="/admin/blogs/<%= blog.id %>" style="color: inherit;"><%= blog.title %></a>
+                      </div>
+                    </td>
+                    <td><%= blog.author_name %></td>
+                    <td><%= blog.category_name || 'Uncategorized' %></td>
+                    <td>
+                      <span class="status-badge status-<%= blog.status %>"><%= blog.status %></span>
+                    </td>
+                    <td><%= blog.views %></td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);">
+                      <%= new Date(blog.updated_at || blog.created_at).toLocaleDateString() %>
+                    </td>
+                    <td style="text-align: right;">
+                      <div class="action-buttons-cell" style="justify-content: flex-end;">
+                        <a href="/admin/blogs/<%= blog.id %>" class="btn-admin-action btn-view" title="Preview details"><i class="fa-solid fa-eye"></i> View</a>
+                        
+                        <% if (blog.status === 'pending') { %>
+                          <!-- Quick Approve -->
+                          <form action="/admin/blogs/<%= blog.id %>/approve" method="POST" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                            <button type="submit" class="btn-admin-action btn-approve" title="Approve & Publish"><i class="fa-solid fa-check"></i></button>
+                          </form>
+                          <!-- Reject trigger toggles inline drawer -->
+                          <button type="button" class="btn-admin-action btn-reject" onclick="toggleRejectBox(<%= blog.id %>)" title="Decline / Return to Author"><i class="fa-solid fa-xmark"></i></button>
+                        <% } %>
+
+                        <!-- Feature Toggle -->
+                        <form action="/admin/blogs/<%= blog.id %>/feature" method="POST" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-feature" title="Toggle Editor's Pick" style="<%= blog.featured === 1 ? 'background-color: var(--gold);' : '' %>">
+                            <i class="fa-solid <%= blog.featured === 1 ? 'fa-star' : 'fa-star-o' %>"></i>
+                          </button>
+                        </form>
+
+                        <!-- Delete -->
+                        <form action="/admin/blogs/<%= blog.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="blog manuscript '<%= blog.title %>'" style="display:inline;">
+                          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                          <button type="submit" class="btn-admin-action btn-delete" title="Delete paper"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Rejection Form Inline Row -->
+                  <tr id="reject-box-<%= blog.id %>" style="display:none; background-color: rgba(220,38,38,0.02);">
+                    <td colspan="8" style="padding: 1.25rem 2rem;">
+                      <form action="/admin/blogs/<%= blog.id %>/reject" method="POST" style="max-width: 600px;">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                        <label style="font-size:0.8rem; font-weight:700; color:var(--error); display:block; margin-bottom:0.5rem;">Manuscript Rejection Feedback</label>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">Enter the reasons. The author will be notified to modify and resubmit.</p>
+                        <textarea name="rejection_reason" placeholder="Describe formatting compliance failures, similarity overlap thresholds, or references editing requirements..." required style="width:100%; height:90px; padding:0.5rem; margin-bottom:0.75rem;" minlength="10"></textarea>
+                        <div style="display:flex; gap:0.5rem;">
+                          <button type="submit" class="btn btn-secondary" style="background-color: var(--error); border-color:var(--error); padding: 0.4rem 1.25rem; font-size: 0.8rem;"><i class="fa-solid fa-ban"></i> Confirm Rejection</button>
+                          <button type="button" class="btn btn-ghost" onclick="toggleRejectBox(<%= blog.id %>)" style="padding: 0.4rem 1.25rem; font-size: 0.8rem;">Cancel</button>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% else { %>
+                <tr>
+                  <td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0;">No manuscripts found under this tab.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (filters.totalPages > 1) { %>
+          <div class="pagination" style="margin-top: 2rem;">
+            <a href="/admin/blogs?page=<%= filters.page - 1 %>&status=<%= filters.status %>&category=<%= filters.category %>&search=<%= filters.search %>" class="pagination-item <%= filters.page === 1 ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-left"></i></a>
+            <% for (let i = 1; i <= filters.totalPages; i++) { %>
+              <a href="/admin/blogs?page=<%= i %>&status=<%= filters.status %>&category=<%= filters.category %>&search=<%= filters.search %>" class="pagination-item <%= filters.page === i ? 'active' : '' %>"><%= i %></a>
+            <% } %>
+            <a href="/admin/blogs?page=<%= filters.page + 1 %>&status=<%= filters.status %>&category=<%= filters.category %>&search=<%= filters.search %>" class="pagination-item <%= filters.page === filters.totalPages ? 'disabled' : '' %>"><i class="fa-solid fa-chevron-right"></i></a>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  </main>
+</div>
+
+<!-- Modal confirmation overlay -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="admin-modal">
+    <h4>Verify Article Deletion</h4>
+    <p>Are you sure you want to permanently delete <strong id="modal-item-name">this resource</strong>? This cascades to delete all comments associated with it. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-reject" id="modal-confirm-delete-btn">Yes, Delete Article</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  function toggleRejectBox(id) {
+    const el = document.getElementById('reject-box-' + id);
+    if (el) {
+      el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+      if (el.style.display === 'table-row') {
+        el.querySelector('textarea').focus();
+      }
+    }
+  }
+</script>

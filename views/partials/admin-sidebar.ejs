@@ -1,0 +1,95 @@
+<aside class="admin-sidebar">
+  <!-- Brand logo and Admin designation -->
+  <div class="admin-badge-container">
+    <a href="/admin" class="logo" style="justify-content: center; font-size: 1.35rem;">
+      <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
+    </a>
+    <span class="admin-badge-pill">Administrator</span>
+  </div>
+
+  <% 
+    const counts = user.admin_counts || { pending_blogs: 0, pending_comments: 0, unread_contacts: 0 };
+  %>
+
+  <!-- Sections of Menu -->
+  <div class="admin-nav-section">
+    <h5>Overview</h5>
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/admin"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="admin-nav-section">
+    <h5>Content</h5>
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/admin/blogs">
+          <i class="fa-solid fa-newspaper"></i> Blogs Review
+          <% if (counts.pending_blogs > 0) { %>
+            <span class="sidebar-badge" style="background: var(--warning); color: var(--white);"><%= counts.pending_blogs %></span>
+          <% } %>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/comments">
+          <i class="fa-solid fa-comments"></i> Comments Review
+          <% if (counts.pending_comments > 0) { %>
+            <span class="sidebar-badge" style="background: var(--warning); color: var(--white);"><%= counts.pending_comments %></span>
+          <% } %>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/services"><i class="fa-solid fa-briefcase"></i> Services CRUD</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="admin-nav-section">
+    <h5>Users</h5>
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/admin/users"><i class="fa-solid fa-users"></i> All Users</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="admin-nav-section">
+    <h5>Communications</h5>
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/admin/contacts">
+          <i class="fa-solid fa-envelope"></i> Contact Forms
+          <% if (counts.unread_contacts > 0) { %>
+            <span class="sidebar-badge" style="background: var(--error); color: var(--white);"><%= counts.unread_contacts %></span>
+          <% } %>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/newsletter"><i class="fa-solid fa-at"></i> Newsletter</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="admin-nav-section">
+    <h5>System</h5>
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/admin/settings"><i class="fa-solid fa-sliders"></i> Site Settings</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Bottom Options -->
+  <div class="admin-nav-section" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 1rem;">
+    <ul class="admin-sidebar-menu">
+      <li>
+        <a href="/"><i class="fa-solid fa-globe"></i> View Public Site</a>
+      </li>
+      <li>
+        <a href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </li>
+    </ul>
+  </div>
+</aside>

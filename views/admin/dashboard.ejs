@@ -1,0 +1,182 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <%- include('../partials/admin-sidebar') %>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <div class="content-header">
+      <div>
+        <h1>Administrative Dashboard</h1>
+        <div class="content-header-meta">Real-time statistics, review queues, and system audits.</div>
+      </div>
+      <div id="admin-clock" style="font-weight: 600; font-size: 0.95rem; color: var(--text-dark);"></div>
+    </div>
+
+    <!-- Notification Toasts -->
+    <%- include('../partials/flash') %>
+
+    <!-- Admin stats grid (6 cards) -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Total Users</div>
+            <div class="admin-stat-number"><%= counts.total_users %></div>
+          </div>
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Total Blogs</div>
+            <div class="admin-stat-number"><%= counts.total_blogs %></div>
+          </div>
+          <i class="fa-solid fa-newspaper"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card card-warning">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Pending Blogs</div>
+            <div class="admin-stat-number" style="color: var(--warning);"><%= counts.pending_blogs %></div>
+          </div>
+          <i class="fa-solid fa-circle-exclamation" style="color: var(--warning);"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card card-success">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Total Views</div>
+            <div class="admin-stat-number" style="color: var(--success);"><%= counts.total_views %></div>
+          </div>
+          <i class="fa-regular fa-eye" style="color: var(--success);"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Total Queries</div>
+            <div class="admin-stat-number"><%= counts.total_contacts %></div>
+          </div>
+          <i class="fa-solid fa-envelope"></i>
+        </div>
+      </div>
+
+      <div class="admin-stat-card card-gold">
+        <div class="admin-stat-card-body">
+          <div>
+            <div class="admin-stat-label">Unread Queries</div>
+            <div class="admin-stat-number" style="color: var(--gold);"><%= counts.unread_contacts %></div>
+          </div>
+          <i class="fa-solid fa-circle-envelope" style="color: var(--gold);"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row (Chart.js wrappers) -->
+    <div class="admin-charts-grid">
+      <!-- Publications line chart -->
+      <div class="admin-chart-card">
+        <h3>Publications Issued (Last 12 Months)</h3>
+        <div class="chart-container">
+          <canvas id="blogs-chart" 
+                  data-labels="<%= JSON.stringify(charts.blogs.labels) %>" 
+                  data-counts="<%= JSON.stringify(charts.blogs.data) %>">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Registrations bar chart -->
+      <div class="admin-chart-card">
+        <h3>New Scholar Registrations (Last 6 Months)</h3>
+        <div class="chart-container">
+          <canvas id="users-chart" 
+                  data-labels="<%= JSON.stringify(charts.users.labels) %>" 
+                  data-counts="<%= JSON.stringify(charts.users.data) %>">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Queue Lists Split (3 Columns Grid) -->
+    <div class="admin-bottom-grid">
+      
+      <!-- Column 1: Pending Blogs -->
+      <div class="admin-list-panel">
+        <h3>Submissions Review Queue (<%= recent_blogs.length %>)</h3>
+        <ul class="admin-list">
+          <% if (recent_blogs && recent_blogs.length > 0) { %>
+            <% recent_blogs.forEach(blog => { %>
+              <li class="admin-list-item">
+                <div class="admin-list-item-meta">
+                  <strong style="max-width: 160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= blog.title %></strong>
+                  <span>By <%= blog.author_name %></span>
+                </div>
+                <div class="action-buttons-cell">
+                  <a href="/admin/blogs/<%= blog.id %>" class="btn-admin-action btn-view" title="Review draft"><i class="fa-solid fa-chevron-right"></i> Review</a>
+                </div>
+              </li>
+            <% }) %>
+          <% } else { %>
+            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: center; margin-top: 1rem;">No papers pending review.</p>
+          <% } %>
+        </ul>
+      </div>
+
+      <!-- Column 2: Recent Contacts -->
+      <div class="admin-list-panel">
+        <h3>Recent Scholar Inquiries</h3>
+        <ul class="admin-list">
+          <% if (recent_contacts && recent_contacts.length > 0) { %>
+            <% recent_contacts.forEach(cont => { %>
+              <li class="admin-list-item">
+                <div class="admin-list-item-meta">
+                  <strong><%= cont.name %></strong>
+                  <span style="max-width: 140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= cont.service %></span>
+                </div>
+                <div>
+                  <span class="status-badge <%= cont.status === 'unread' ? 'status-pending' : 'status-draft' %>" style="font-size: 0.7rem;"><%= cont.status %></span>
+                </div>
+              </li>
+            <% }) %>
+            <div style="text-align: center; margin-top: 1rem;">
+              <a href="/admin/contacts" style="font-size: 0.8rem; color: var(--gold); font-weight: 700;">View All Enquiries</a>
+            </div>
+          <% } else { %>
+            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: center; margin-top: 1rem;">No query submissions.</p>
+          <% } %>
+        </ul>
+      </div>
+
+      <!-- Column 3: Audit Activity Logs -->
+      <div class="admin-list-panel">
+        <h3>Administrative Audit Trail</h3>
+        <div class="activity-log-container">
+          <% if (activity_log && activity_log.length > 0) { %>
+            <% activity_log.forEach(log => { %>
+              <div class="activity-item">
+                <div class="activity-item-content">
+                  <p><strong><%= log.user_name || 'System' %></strong>: <%= log.action %></p>
+                  <p style="font-size: 0.75rem; color: var(--text-mid);"><%= log.details.split(' | ')[0] %></p>
+                  <span class="activity-item-time"><%= new Date(log.created_at).toLocaleTimeString() %> | <%= new Date(log.created_at).toLocaleDateString() %></span>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: center; margin-top: 1rem;">No actions recorded yet.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>

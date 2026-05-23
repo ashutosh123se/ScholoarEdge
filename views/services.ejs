@@ -1,0 +1,40 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="blog-detail-header" style="padding: 4rem 0 3rem;">
+  <div class="container">
+    <h1>Our Academic Services</h1>
+    <p style="color: var(--gold-pale); max-width: 600px; margin: 0 auto;">Explore professional journal matching, thesis mentoring, and statistical support services designed for rigorous research standards.</p>
+  </div>
+</div>
+
+<section class="services-section">
+  <div class="container">
+    <div class="services-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <% services.forEach((service, index) => { %>
+        <div class="service-card <%= index === 1 ? 'featured-card' : '' %>" style="height: 100%; display: flex; flex-direction: column;">
+          <% if (service.tag) { %>
+            <span class="service-tag"><%= service.tag %></span>
+          <% } %>
+          <div class="service-icon">
+            <i class="fa-solid <%= service.icon %>"></i>
+          </div>
+          <h3><%= service.title %></h3>
+          <p style="flex-grow: 1;"><%= service.description %></p>
+          <a href="/contact?service=<%= encodeURIComponent(service.title) %>" class="btn <%= index === 1 ? 'btn-ghost' : 'btn-secondary' %>" style="width: 100%; text-align: center;">Book consultation</a>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- Additional Information Section -->
+<section style="background-color: var(--white); padding: 5rem 0;">
+  <div class="container" style="max-width: 800px; text-align: center;">
+    <h2 class="section-title">Ethical Mentoring & Index Commitment</h2>
+    <p style="margin-bottom: 2rem;">We strictly abide by ethical publishing codes. ScholarsEdge does not write papers from scratch using automated bots or generate synthetic data. We provide peer review, critical audit, proofreading, statistical calculations, and indexing support services to help you build solid and authentic research papers.</p>
+    <a href="/contact" class="btn btn-primary"><i class="fa-solid fa-envelope"></i> Send an Enquiry</a>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,145 @@
+<%- include('../partials/head') %>
+
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="auth-logo">
+          <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
+        </a>
+        <h2>Create Account</h2>
+        <p>Join ScholarsEdge and start publishing today</p>
+      </div>
+
+      <!-- Server Flash Messages -->
+      <%- include('../partials/flash') %>
+
+      <form action="/auth/register" method="POST" class="auth-form" id="register-form">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+        <div class="form-group">
+          <label for="name">Academic Name *</label>
+          <input type="text" name="name" id="name" class="form-control" placeholder="Dr. Priya Sharma" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Institutional Email *</label>
+          <input type="email" name="email" id="email" class="form-control" placeholder="priya@test.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <div class="password-input-wrapper">
+            <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
+            <button type="button" class="password-toggle-btn" id="password-toggle" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <!-- Strength Meter Bar -->
+          <div class="strength-meter" id="strength-meter">
+            <div class="strength-bar" id="bar-1"></div>
+            <div class="strength-bar" id="bar-2"></div>
+            <div class="strength-bar" id="bar-3"></div>
+            <div class="strength-bar" id="bar-4"></div>
+          </div>
+          <span class="strength-text" id="strength-text" style="color: var(--text-muted);">Strength: Not Evaluated</span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password">Confirm Password *</label>
+          <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div class="auth-options" style="margin-top: 1rem;">
+          <label class="checkbox-label" style="align-items: flex-start;">
+            <input type="checkbox" name="agree" required style="margin-top: 0.2rem;">
+            <span>I agree to the <a href="#" style="color:var(--gold); font-weight:700;">Terms of Services</a> and strict academic <a href="#" style="color:var(--gold); font-weight:700;">Ethical Guidelines</a>.</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-auth-submit" style="margin-top: 1rem;">Create Account</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/auth/login">Login Here</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Password Visibility Toggle
+      const toggleBtn = document.getElementById('password-toggle');
+      const passwordInput = document.getElementById('password');
+
+      if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+          const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+          passwordInput.setAttribute('type', type);
+          const icon = toggleBtn.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+          }
+        });
+      }
+
+      // 2. Interactive Password Strength Checker
+      const strengthText = document.getElementById('strength-text');
+      const bars = [
+        document.getElementById('bar-1'),
+        document.getElementById('bar-2'),
+        document.getElementById('bar-3'),
+        document.getElementById('bar-4')
+      ];
+
+      passwordInput.addEventListener('input', () => {
+        const val = passwordInput.value;
+        let score = 0;
+
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[a-z]/.test(val) && /[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        // Reset classes
+        bars.forEach(b => {
+          b.className = 'strength-bar';
+        });
+
+        if (val.length === 0) {
+          strengthText.textContent = 'Strength: Not Evaluated';
+          strengthText.style.color = 'var(--text-muted)';
+        } else if (score === 1) {
+          bars[0].classList.add('weak');
+          strengthText.textContent = 'Strength: Very Weak (Add letters/numbers)';
+          strengthText.style.color = 'var(--error)';
+        } else if (score === 2) {
+          bars[0].classList.add('medium');
+          bars[1].classList.add('medium');
+          strengthText.textContent = 'Strength: Medium (Add uppercase/symbols)';
+          strengthText.style.color = 'var(--warning)';
+        } else if (score >= 3) {
+          bars.forEach(b => b.classList.add('strong'));
+          strengthText.textContent = 'Strength: Strong Security';
+          strengthText.style.color = 'var(--success)';
+        }
+      });
+
+      // 3. Client password confirmation matching
+      const form = document.getElementById('register-form');
+      const confirmInput = document.getElementById('confirm_password');
+      form.addEventListener('submit', (e) => {
+        if (passwordInput.value !== confirmInput.value) {
+          e.preventDefault();
+          alert('Confirm password does not match with password!');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
