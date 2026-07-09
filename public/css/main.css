@@ -1836,3 +1836,17 @@ textarea.form-control {
     grid-template-columns: 1fr;
   }
 }
+
+ . p r o f i l e - g r i d   { 
+     d i s p l a y :   g r i d ; 
+     g r i d - t e m p l a t e - c o l u m n s :   1 . 1 f r   0 . 9 f r ; 
+     g a p :   2 r e m ; 
+     a l i g n - i t e m s :   f l e x - s t a r t ; 
+ } 
+ @ m e d i a   ( m a x - w i d t h :   7 6 8 p x )   { 
+     . p r o f i l e - g r i d   { 
+         g r i d - t e m p l a t e - c o l u m n s :   1 f r ; 
+     } 
+ } 
+  
+ 
