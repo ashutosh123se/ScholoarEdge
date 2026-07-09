@@ -10,7 +10,7 @@
 
 <section class="services-section">
   <div class="container">
-    <div class="services-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="services-grid">
       <% services.forEach((service, index) => { %>
         <div class="service-card <%= index === 1 ? 'featured-card' : '' %>" style="height: 100%; display: flex; flex-direction: column;">
           <% if (service.tag) { %>

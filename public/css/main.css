@@ -1779,7 +1779,7 @@ textarea.form-control {
     width: 100%;
     background-color: var(--navy);
     flex-direction: column;
-    padding: 2rem;
+    padding: 2rem 2rem 6rem 2rem;
     gap: 1.5rem;
     border-bottom: 1px solid var(--border);
     display: none;
@@ -1795,8 +1795,9 @@ textarea.form-control {
   .nav-menu.show ~ .nav-actions {
     display: flex;
     position: absolute;
-    top: 260px;
+    top: 280px;
     left: 2rem;
+    z-index: 1001;
   }
   .hero-content h1 {
     font-size: 2.5rem;
