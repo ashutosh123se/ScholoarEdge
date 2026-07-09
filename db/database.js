@@ -347,61 +347,7 @@ const seedDatabase = () => {
     insertIgnore.run('base_url', process.env.BASE_URL || 'https://scholoar-edge.vercel.app', 'Site Base URL', 'url', 'seo');
   }
 
-  // --- Blogs ---
-  const blogCount = db.prepare('SELECT COUNT(*) as count FROM blogs').get().count;
-  if (blogCount === 0) {
-    const adminId = db.prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1").get()?.id || 1;
-    const userId = db.prepare("SELECT id FROM users WHERE role = 'user' LIMIT 1").get()?.id || 2;
-    const catPubTips = db.prepare("SELECT id FROM categories WHERE slug = 'publication-tips' LIMIT 1").get()?.id;
-    const catJourney = db.prepare("SELECT id FROM categories WHERE slug = 'phd-journey' LIMIT 1").get()?.id;
-    const catWriting = db.prepare("SELECT id FROM categories WHERE slug = 'academic-writing' LIMIT 1").get()?.id;
-    const catData = db.prepare("SELECT id FROM categories WHERE slug = 'data-science' LIMIT 1").get()?.id;
 
-    const insertBlog = db.prepare(`
-      INSERT INTO blogs (user_id, category_id, title, slug, excerpt, content, status, views, reading_time, featured, published_at, meta_description)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
-    `);
-    insertBlog.run(adminId, catPubTips, 'How to Write a Scopus-Worthy Research Paper in 2024', 'how-to-write-a-scopus-worthy-research-paper-in-2024', 'Learn the essential steps to draft an academic paper that meets Scopus standards, focusing on research structure, journal selection, and addressing reviewer queries.', '<p>Securing a publication in a <strong>Scopus-indexed journal</strong> is a major milestone for any researcher. In this article, we outline the exact step-by-step roadmap to elevate your research. We discuss key points such as framing research questions, outlining the introduction, detailing the methodology, and preparing logical discussions of empirical results.</p><h2>1. Focus on Novelty</h2><p>Journals reject 80% of submissions due to a lack of originality. Make sure you highlight your work\'s distinct contribution in your abstract and introduction.</p><h2>2. Follow the IMRAD Structure</h2><p>Structure your paper clearly: Introduction, Methods, Results, And Discussion. Each section has a specific purpose that must be respected.</p>', 'published', 142, 5, 1, 'Step-by-step guide to writing a Scopus-worthy research paper: novelty, IMRAD structure, journal selection, and addressing reviewer queries in 2024.');
-    insertBlog.run(adminId, catJourney, 'Common PhD Thesis Mistakes and How to Avoid Them', 'common-phd-thesis-mistakes-and-how-to-avoid-them', 'Discover critical formatting, structuring, and scoping mistakes PhD candidates make during thesis writing, and strategies to prevent them.', '<p>A PhD thesis is the culmination of years of hard work, yet many candidates make preventable structural and procedural errors. In this post, we discuss how to manage review cycles, align the literature review with empirical outcomes, and manage references without errors.</p><h2>1. Inconsistent Citation Style</h2><p>Ensure that you stick to one style (APA, IEEE, etc.) throughout your thesis. Use referencing software like Mendeley or Zotero.</p>', 'published', 89, 4, 0, 'Avoid these critical PhD thesis mistakes: inconsistent citations, poor structure, missed deadlines, and misaligned literature reviews. Expert guidance from ScholarsEdge.');
-    insertBlog.run(adminId, catWriting, 'Understanding Plagiarism Thresholds in Top Journals', 'understanding-plagiarism-thresholds-in-top-journals', 'A deep dive into Turnitin metrics, similarity indexes, and how top publishers like Elsevier, Springer, and IEEE handle text overlapping.', '<p>What is a safe similarity index? Most top journals require similarity to be under 15% overall, and under 1% from any single source. Learn how paraphrasing, block quoting, and proper citations reduce plagiarism risks.</p>', 'published', 215, 6, 0, 'Understanding plagiarism thresholds at Elsevier, Springer, and IEEE: Turnitin similarity indexes, acceptable limits, and how to reduce text overlap in academic papers.');
-
-    const insertPending = db.prepare(`INSERT INTO blogs (user_id, category_id, title, slug, excerpt, content, status, views, reading_time, featured) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, 0)`);
-    insertPending.run(userId, catPubTips, 'My Journey from Research Paper to Scopus Publication', 'my-journey-from-research-paper-to-scopus-publication', 'A personal narrative on writing, formatting, submitting, and revising a paper until it was indexed in Scopus.', '<p>This article chronicles the real struggle and revisions needed to satisfy reviewers for a Scopus Q1 journal. From initial rejection to major revisions and final acceptance, read the insights from a PhD student.</p>', 0, 5);
-    insertPending.run(userId, catData, 'Statistical Methods for Beginners: SPSS vs R', 'statistical-methods-for-beginners-spss-vs-r', 'An introductory guide comparing SPSS and R programming for basic research analytics, listing pros, cons, and learning curves.', '<p>Deciding between SPSS and R is critical for early-career researchers. While SPSS offers a visual menu interface, R provides superior flexibility and vector charting capabilities. This guide will help you choose.</p>', 0, 7);
-    console.log('[Seed] Blogs table seeded.');
-  }
-
-  // --- Contacts ---
-  const contactCount = db.prepare('SELECT COUNT(*) as count FROM contacts').get().count;
-  if (contactCount === 0) {
-    const c = db.prepare(`INSERT INTO contacts (name, email, phone, service, message, status) VALUES (?, ?, ?, ?, ?, ?)`);
-    c.run('Prof. Rajesh Kumar', 'rajesh.kumar@university.edu', '+91 9988776655', 'SCI Journal Support', 'Hello, I have a draft manuscript on neural networks that I want to target for an SCI journal. I need help formatting and selecting suitable journals. Please contact me.', 'unread');
-    c.run('Ananya Sen', 'ananya.sen@outlook.com', '+91 8877665544', 'PhD Thesis Writing', 'I need thesis support for my upcoming research submission in management studies. Can we schedule a brief call next week to discuss rates and timeline?', 'unread');
-    c.run('Dr. Keith Carter', 'kcarter@scienceinst.org', '+1 555-0199', 'Data Analysis & Modeling', 'I need complex statistical modeling (structural equation modeling) done for a medical trial study in R. Do you have experts in AMOS/R available?', 'unread');
-    console.log('[Seed] Contacts table seeded.');
-  }
-
-  // --- Newsletter Subscribers ---
-  const newsletterCount = db.prepare('SELECT COUNT(*) as count FROM newsletter').get().count;
-  if (newsletterCount === 0) {
-    const n = db.prepare(`INSERT INTO newsletter (email, active) VALUES (?, 1)`);
-    n.run('researcher1@gmail.com');
-    n.run('scholar_hub@yahoo.com');
-    n.run('p.chatterjee@academy.org');
-    n.run('mary.watson@mit.edu');
-    n.run('j.smith@cambridge.edu');
-    console.log('[Seed] Newsletter table seeded.');
-  }
-
-  // --- Testimonials ---
-  const testimonialCount = db.prepare('SELECT COUNT(*) as count FROM testimonials').get().count;
-  if (testimonialCount === 0) {
-    const t = db.prepare(`INSERT INTO testimonials (name, designation, quote, avatar_seed, display_order, featured, active) VALUES (?, ?, ?, ?, ?, ?, 1)`);
-    t.run('Dr. Priya Sharma', 'Assistant Professor, IIT Bombay', 'The editorial team at ScholarsEdge was exceptional. They helped me clean up my methodology section and matched my paper with a Q2 Elsevier journal. It got accepted within 4 months!', 'Priya', 1, 0);
-    t.run('Dr. Sanjay Nair', 'PhD Graduate, IISc Bangalore', 'I was struggling to write my thesis proposal. ScholarsEdge experts gave me structured feedback that transformed my literature review. Highly recommended for PhD candidates.', 'Sanjay', 2, 1);
-    t.run('Dr. Rebecca Scott', 'Medical Researcher, University of Delhi', 'Their statistical data analysis services saved me weeks of coding in R. The regression models and structural equation modeling (SEM) they built were directly accepted by the reviewers.', 'Rebecca', 3, 0);
-    console.log('[Seed] Testimonials table seeded.');
-  }
 
   // --- Legal Pages ---
   const pageCount = db.prepare('SELECT COUNT(*) as count FROM pages').get().count;
