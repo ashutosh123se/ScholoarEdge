@@ -49,6 +49,18 @@ app.use(flashMessages);
 // Global Double-Submit CSRF check
 app.use(csrfMiddleware);
 
+// Inject admin sidebar badge counts for all /admin pages
+app.use('/admin', (req, res, next) => {
+  try {
+    const db = require('./db/database');
+    const pending_blogs    = db.prepare("SELECT COUNT(*) as c FROM blogs WHERE status='pending'").get().c;
+    const pending_comments = db.prepare("SELECT COUNT(*) as c FROM comments WHERE status='pending'").get().c;
+    const unread_contacts  = db.prepare("SELECT COUNT(*) as c FROM contacts WHERE status='unread'").get().c;
+    res.locals.admin_counts = { pending_blogs, pending_comments, unread_contacts };
+  } catch (e) { res.locals.admin_counts = {}; }
+  next();
+});
+
 // Route Groupings mounting
 app.use('/', publicRouter);
 app.use('/auth', authRouter);

@@ -1,0 +1,170 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header" style="display: flex; align-items: flex-start; justify-content: space-between;">
+      <div>
+        <h1>Homepage Editor</h1>
+        <div class="content-header-meta">Edit hero section, stats counters, and footer text. Changes appear live on the homepage.</div>
+      </div>
+      <a href="/" target="_blank" class="btn btn-ghost" style="border-color: var(--border);">
+        <i class="fa-solid fa-eye"></i> Preview Site
+      </a>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <form action="/admin/homepage" method="POST" id="settings-form">
+      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+      <!-- Tab Navigation -->
+      <div style="display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 2rem;">
+        <% ['hero', 'stats', 'footer'].forEach((tab, i) => { %>
+        <button type="button" class="tab-btn <%= i === 0 ? 'active' : '' %>" data-tab="tab-<%= tab %>"
+                style="padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; border-bottom: 3px solid <%= i === 0 ? 'var(--navy)' : 'transparent' %>; margin-bottom: -2px; color: <%= i === 0 ? 'var(--navy)' : 'var(--text-muted)' %>; transition: all 0.2s;">
+          <%= tab === 'hero' ? '🏠 Hero Section' : tab === 'stats' ? '📊 Stats Counters' : '🦶 Footer' %>
+        </button>
+        <% }) %>
+      </div>
+
+      <!-- Hero Tab -->
+      <div id="tab-hero" class="tab-content" style="display: block;">
+        <div class="dashboard-table-card" style="padding: 2rem;">
+          <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-house" style="color: var(--gold);"></i> Hero Section
+          </h3>
+
+          <div class="form-group">
+            <label>Hero Heading <span style="font-size: 0.75rem; color: var(--text-muted);">(HTML allowed, e.g. &lt;em&gt; for italics)</span></label>
+            <textarea name="hero_heading" class="form-control" rows="3"><%= settings.hero_heading || '' %></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Hero Subheading / Description</label>
+            <textarea name="hero_subheading" class="form-control" rows="4"><%= settings.hero_subheading || '' %></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+              <h4 style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-muted);">Primary CTA Button</h4>
+              <div class="form-group">
+                <label>Button Label</label>
+                <input type="text" name="hero_cta_primary_text" class="form-control" value="<%= settings.hero_cta_primary_text || 'Explore Services' %>">
+              </div>
+              <div class="form-group">
+                <label>Button URL</label>
+                <input type="text" name="hero_cta_primary_url" class="form-control" value="<%= settings.hero_cta_primary_url || '/services' %>">
+              </div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-muted);">Secondary CTA Button</h4>
+              <div class="form-group">
+                <label>Button Label</label>
+                <input type="text" name="hero_cta_secondary_text" class="form-control" value="<%= settings.hero_cta_secondary_text || 'Book Consultation' %>">
+              </div>
+              <div class="form-group">
+                <label>Button URL</label>
+                <input type="text" name="hero_cta_secondary_url" class="form-control" value="<%= settings.hero_cta_secondary_url || '/contact' %>">
+              </div>
+            </div>
+          </div>
+
+          <div style="background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); border-radius: var(--radius); padding: 1rem; margin-top: 0.5rem;">
+            <p style="font-size: 0.8rem; color: var(--text-mid); margin-bottom: 0;">
+              <i class="fa-solid fa-circle-info" style="color: var(--gold); margin-right: 5px;"></i>
+              You can use basic HTML in the heading: <code>&lt;em&gt;italic text&lt;/em&gt;</code>, <code>&lt;strong&gt;bold&lt;/strong&gt;</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Tab -->
+      <div id="tab-stats" class="tab-content" style="display: none;">
+        <div class="dashboard-table-card" style="padding: 2rem;">
+          <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-chart-bar" style="color: var(--gold);"></i> Stats Counters</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+            These numbers appear in the animated counter section on the homepage. The Publications count adds the number of published blog posts automatically.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="stat-editor-card" style="background: var(--cream); border-radius: var(--radius); padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+              <label style="font-weight: 700; font-size: 0.85rem;">Publications Base Count</label>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.3rem 0 0.75rem;">Total published blog posts are added on top of this number.</p>
+              <input type="number" name="stats_publications_base" class="form-control" value="<%= settings.stats_publications_base || 1420 %>" min="0">
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
+                Current display value: <strong><%= (parseInt(settings.stats_publications_base) || 1420) %>+</strong>
+              </div>
+            </div>
+
+            <div class="stat-editor-card" style="background: var(--cream); border-radius: var(--radius); padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏆</div>
+              <label style="font-weight: 700; font-size: 0.85rem;">Years of Experience</label>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.3rem 0 0.75rem;">Appears with a "+" suffix on the homepage.</p>
+              <input type="number" name="stats_years_experience" class="form-control" value="<%= settings.stats_years_experience || 15 %>" min="1" max="100">
+            </div>
+
+            <div class="stat-editor-card" style="background: var(--cream); border-radius: var(--radius); padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+              <label style="font-weight: 700; font-size: 0.85rem;">Success Rate (%)</label>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.3rem 0 0.75rem;">Can be a decimal, e.g. 98.4</p>
+              <input type="text" name="stats_success_rate" class="form-control" value="<%= settings.stats_success_rate || '98.4' %>">
+            </div>
+
+            <div class="stat-editor-card" style="background: var(--cream); border-radius: var(--radius); padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">✍️</div>
+              <label style="font-weight: 700; font-size: 0.85rem;">Human Written %</label>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.3rem 0 0.75rem;">Represents 0% AI policy (typically 100).</p>
+              <input type="number" name="stats_human_written" class="form-control" value="<%= settings.stats_human_written || 100 %>" min="0" max="100">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Tab -->
+      <div id="tab-footer" class="tab-content" style="display: none;">
+        <div class="dashboard-table-card" style="padding: 2rem;">
+          <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-layer-group" style="color: var(--gold);"></i> Footer Content</h3>
+
+          <div class="form-group">
+            <label>Footer About Text</label>
+            <textarea name="footer_about_text" class="form-control" rows="4"><%= settings.footer_about_text || '' %></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Copyright Line</label>
+            <input type="text" name="footer_copyright" class="form-control" value="<%= settings.footer_copyright || '' %>">
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Bar -->
+      <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; padding: 1.25rem; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);">
+        <a href="/" target="_blank" class="btn btn-ghost" style="border-color: var(--border);">Preview</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Save All Changes
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.style.borderBottomColor = 'transparent';
+      b.style.color = 'var(--text-muted)';
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    btn.style.borderBottomColor = 'var(--navy)';
+    btn.style.color = 'var(--navy)';
+    document.getElementById(btn.dataset.tab).style.display = 'block';
+  });
+});
+</script>

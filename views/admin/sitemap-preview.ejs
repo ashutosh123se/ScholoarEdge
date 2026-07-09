@@ -1,0 +1,64 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1>Sitemap Preview</h1>
+        <div class="content-header-meta">Preview all URLs that will appear in the sitemap.xml</div>
+      </div>
+      <a href="/sitemap.xml" target="_blank" class="btn btn-primary">
+        <i class="fa-solid fa-code"></i> View sitemap.xml
+      </a>
+    </div>
+
+    <!-- Static URLs -->
+    <div class="dashboard-table-card" style="margin-bottom: 1.5rem;">
+      <div class="card-header-row">
+        <h3>Static Pages</h3>
+        <span class="status-badge status-published">Always included</span>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>URL</th><th>Priority</th><th>Frequency</th></tr></thead>
+        <tbody>
+          <tr><td><a href="<%= baseUrl %>/" target="_blank" style="color: var(--navy)"><%= baseUrl %>/</a></td><td>1.0</td><td>Weekly</td></tr>
+          <tr><td><a href="<%= baseUrl %>/blog" target="_blank" style="color: var(--navy)"><%= baseUrl %>/blog</a></td><td>0.9</td><td>Daily</td></tr>
+          <tr><td><a href="<%= baseUrl %>/services" target="_blank" style="color: var(--navy)"><%= baseUrl %>/services</a></td><td>0.8</td><td>Monthly</td></tr>
+          <tr><td><a href="<%= baseUrl %>/contact" target="_blank" style="color: var(--navy)"><%= baseUrl %>/contact</a></td><td>0.7</td><td>Monthly</td></tr>
+          <% pages.forEach(p => { %>
+          <tr><td><a href="<%= baseUrl %>/<%= p.slug %>" target="_blank" style="color: var(--navy)"><%= baseUrl %>/<%= p.slug %></a></td><td>0.5</td><td>Yearly</td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Blog URLs -->
+    <div class="dashboard-table-card">
+      <div class="card-header-row">
+        <h3>Published Blog Posts</h3>
+        <span class="status-badge"><%= blogs.length %> entries</span>
+      </div>
+      <% if (blogs.length === 0) { %>
+      <div style="padding: 2rem; text-align: center; color: var(--text-muted);">No published blog posts yet.</div>
+      <% } else { %>
+      <table class="admin-table">
+        <thead><tr><th>Blog URL</th><th>Last Modified</th><th>Priority</th></tr></thead>
+        <tbody>
+          <% blogs.forEach(b => { %>
+          <tr>
+            <td><a href="<%= baseUrl %>/blog/<%= b.slug %>" target="_blank" style="color: var(--navy); font-size: 0.85rem;"><%= baseUrl %>/blog/<%= b.slug %></a></td>
+            <td style="font-size: 0.8rem; color: var(--text-muted);"><%= b.updated_at ? b.updated_at.slice(0,10) : 'N/A' %></td>
+            <td>0.7</td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>

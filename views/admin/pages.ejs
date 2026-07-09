@@ -1,0 +1,121 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1>Legal Pages</h1>
+        <div class="content-header-meta">Edit Privacy Policy, Terms &amp; Conditions, and Editorial Guidelines.</div>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="/privacy-policy" target="_blank" class="btn btn-ghost" style="font-size: 0.8rem; border-color: var(--border);">
+          <i class="fa-solid fa-eye"></i> Preview
+        </a>
+      </div>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <!-- Page Selector Cards -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <% pages.forEach(p => { %>
+      <a href="/admin/pages/<%= p.slug %>/edit" style="text-decoration: none;">
+        <div class="dashboard-table-card" style="padding: 1.25rem; cursor: pointer; transition: var(--transition); border: 2px solid <%= editPage && editPage.slug === p.slug ? 'var(--navy)' : 'transparent' %>;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: <%= editPage && editPage.slug === p.slug ? 'var(--navy)' : 'var(--cream)' %>; display: flex; align-items: center; justify-content: center; color: <%= editPage && editPage.slug === p.slug ? 'var(--gold)' : 'var(--navy)' %>; font-size: 1rem;">
+              <i class="fa-solid <%= p.slug === 'privacy-policy' ? 'fa-shield-halved' : p.slug === 'terms-conditions' ? 'fa-file-contract' : 'fa-book-open' %>"></i>
+            </div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-dark);"><%= p.title %></div>
+              <div style="font-size: 0.7rem; color: var(--text-muted);">/<%= p.slug %></div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">
+            Last updated: <%= new Date(p.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+
+    <% if (editPage) { %>
+    <!-- Editor -->
+    <div class="dashboard-table-card" style="padding: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0;">Editing: <%= editPage.title %></h3>
+        <a href="/<%= editPage.slug %>" target="_blank" class="btn btn-ghost" style="font-size: 0.8rem; border-color: var(--border);">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> View Live
+        </a>
+      </div>
+
+      <form action="/admin/pages/<%= editPage.slug %>/edit" method="POST">
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+        <div class="form-group">
+          <label>Page Title</label>
+          <input type="text" name="title" class="form-control" value="<%= editPage.title %>" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>SEO Meta Title</label>
+            <input type="text" name="meta_title" class="form-control" value="<%= editPage.meta_title || '' %>" placeholder="Defaults to Page Title | ScholarsEdge">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>SEO Meta Description</label>
+            <input type="text" name="meta_description" class="form-control" value="<%= editPage.meta_description || '' %>" maxlength="160">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Page Content <span style="font-size: 0.75rem; color: var(--text-muted);">(Rich text editor)</span></label>
+          <div id="page-editor" style="min-height: 450px;"></div>
+          <input type="hidden" name="content" id="page-hidden-content" value="">
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+          <a href="/admin/pages" class="btn btn-ghost">← Back to Pages</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const quill = new Quill('#page-editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link'], ['clean']
+          ]
+        }
+      });
+      quill.clipboard.dangerouslyPasteHTML(`<%- editPage.content.replace(/`/g, '\\`') %>`);
+      quill.on('text-change', () => {
+        document.getElementById('page-hidden-content').value = quill.root.innerHTML;
+      });
+      document.getElementById('page-hidden-content').value = quill.root.innerHTML;
+      document.querySelector('form').addEventListener('submit', () => {
+        document.getElementById('page-hidden-content').value = quill.root.innerHTML;
+      });
+    });
+    </script>
+
+    <% } else { %>
+    <div class="dashboard-table-card" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+      <i class="fa-solid fa-arrow-pointer" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+      <p>Select a page above to start editing its content.</p>
+    </div>
+    <% } %>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>

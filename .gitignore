@@ -4,6 +4,8 @@ node_modules/
 # Local databases
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.sqlite
 
 # Environment configuration

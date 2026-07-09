@@ -1,5 +1,5 @@
 <aside class="admin-sidebar">
-  <!-- Brand logo and Admin designation -->
+  <!-- Brand -->
   <div class="admin-badge-container">
     <a href="/admin" class="logo" style="justify-content: center; font-size: 1.35rem;">
       <i class="fa-solid fa-graduation-cap"></i> Scholars<span>Edge</span>
@@ -7,89 +7,95 @@
     <span class="admin-badge-pill">Administrator</span>
   </div>
 
-  <% 
-    const counts = user.admin_counts || { pending_blogs: 0, pending_comments: 0, unread_contacts: 0 };
+  <%
+    const counts = typeof admin_counts !== 'undefined' ? admin_counts : (locals.admin_counts || {});
   %>
 
-  <!-- Sections of Menu -->
+  <!-- Overview -->
   <div class="admin-nav-section">
     <h5>Overview</h5>
     <ul class="admin-sidebar-menu">
-      <li>
-        <a href="/admin"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-      </li>
+      <li><a href="/admin"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
     </ul>
   </div>
 
+  <!-- Content -->
   <div class="admin-nav-section">
     <h5>Content</h5>
     <ul class="admin-sidebar-menu">
       <li>
         <a href="/admin/blogs">
-          <i class="fa-solid fa-newspaper"></i> Blogs Review
+          <i class="fa-solid fa-newspaper"></i> Blogs
           <% if (counts.pending_blogs > 0) { %>
             <span class="sidebar-badge" style="background: var(--warning); color: var(--white);"><%= counts.pending_blogs %></span>
           <% } %>
         </a>
       </li>
+      <li><a href="/admin/blogs/create"><i class="fa-solid fa-circle-plus"></i> New Post</a></li>
       <li>
         <a href="/admin/comments">
-          <i class="fa-solid fa-comments"></i> Comments Review
+          <i class="fa-solid fa-comments"></i> Comments
           <% if (counts.pending_comments > 0) { %>
             <span class="sidebar-badge" style="background: var(--warning); color: var(--white);"><%= counts.pending_comments %></span>
           <% } %>
         </a>
       </li>
-      <li>
-        <a href="/admin/services"><i class="fa-solid fa-briefcase"></i> Services CRUD</a>
-      </li>
+      <li><a href="/admin/categories"><i class="fa-solid fa-tags"></i> Categories</a></li>
     </ul>
   </div>
 
+  <!-- Site Content -->
+  <div class="admin-nav-section">
+    <h5>Site Content</h5>
+    <ul class="admin-sidebar-menu">
+      <li><a href="/admin/homepage"><i class="fa-solid fa-house"></i> Homepage Editor</a></li>
+      <li><a href="/admin/testimonials"><i class="fa-solid fa-star"></i> Testimonials</a></li>
+      <li><a href="/admin/services"><i class="fa-solid fa-briefcase"></i> Services</a></li>
+      <li><a href="/admin/pages"><i class="fa-solid fa-file-lines"></i> Legal Pages</a></li>
+      <li><a href="/admin/redirects"><i class="fa-solid fa-right-left"></i> Redirects</a></li>
+      <li><a href="/admin/media"><i class="fa-solid fa-images"></i> Media Library</a></li>
+    </ul>
+  </div>
+
+  <!-- Users -->
   <div class="admin-nav-section">
     <h5>Users</h5>
     <ul class="admin-sidebar-menu">
-      <li>
-        <a href="/admin/users"><i class="fa-solid fa-users"></i> All Users</a>
-      </li>
+      <li><a href="/admin/users"><i class="fa-solid fa-users"></i> All Users</a></li>
     </ul>
   </div>
 
+  <!-- Communications -->
   <div class="admin-nav-section">
     <h5>Communications</h5>
     <ul class="admin-sidebar-menu">
       <li>
         <a href="/admin/contacts">
-          <i class="fa-solid fa-envelope"></i> Contact Forms
+          <i class="fa-solid fa-envelope"></i> Leads / Enquiries
           <% if (counts.unread_contacts > 0) { %>
             <span class="sidebar-badge" style="background: var(--error); color: var(--white);"><%= counts.unread_contacts %></span>
           <% } %>
         </a>
       </li>
-      <li>
-        <a href="/admin/newsletter"><i class="fa-solid fa-at"></i> Newsletter</a>
-      </li>
+      <li><a href="/admin/newsletter"><i class="fa-solid fa-at"></i> Newsletter</a></li>
     </ul>
   </div>
 
+  <!-- System -->
   <div class="admin-nav-section">
     <h5>System</h5>
     <ul class="admin-sidebar-menu">
-      <li>
-        <a href="/admin/settings"><i class="fa-solid fa-sliders"></i> Site Settings</a>
-      </li>
+      <li><a href="/admin/settings"><i class="fa-solid fa-sliders"></i> Site Settings</a></li>
+      <li><a href="/admin/sitemap" target="_blank"><i class="fa-solid fa-sitemap"></i> Sitemap Preview</a></li>
+      <li><a href="/sitemap.xml" target="_blank"><i class="fa-solid fa-code"></i> sitemap.xml</a></li>
     </ul>
   </div>
 
-  <!-- Bottom Options -->
+  <!-- Bottom -->
   <div class="admin-nav-section" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 1rem;">
     <ul class="admin-sidebar-menu">
-      <li>
-        <a href="/"><i class="fa-solid fa-globe"></i> View Public Site</a>
-      </li>
-      <li>
-        <a href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-      </li>
+      <li><a href="/" target="_blank"><i class="fa-solid fa-globe"></i> View Live Site</a></li>
+      <li><a href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
     </ul>
   </div>
 </aside>

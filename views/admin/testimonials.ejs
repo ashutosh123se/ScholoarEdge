@@ -1,0 +1,170 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1>Testimonials</h1>
+        <div class="content-header-meta">Manage client success stories displayed on the homepage.</div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('add-form-wrapper').style.display='block'; this.style.display='none';">
+        <i class="fa-solid fa-plus"></i> Add Testimonial
+      </button>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <!-- Add Form (hidden initially) -->
+    <div id="add-form-wrapper" style="display: none; margin-bottom: 2rem;">
+      <div class="dashboard-table-card" style="padding: 2rem;">
+        <h3 style="margin-bottom: 1.5rem;">New Testimonial</h3>
+        <form action="/admin/testimonials" method="POST">
+          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" name="name" class="form-control" required placeholder="e.g. Dr. Priya Sharma">
+            </div>
+            <div class="form-group">
+              <label>Designation / Institution *</label>
+              <input type="text" name="designation" class="form-control" required placeholder="e.g. PhD Scholar, IIT Bombay">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Quote / Testimonial *</label>
+            <textarea name="quote" class="form-control" rows="4" required placeholder="Enter their testimonial quote..."></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Avatar Seed <span style="font-size: 0.7rem; color: var(--text-muted);">(name for auto-avatar)</span></label>
+              <input type="text" name="avatar_seed" class="form-control" placeholder="Priya (= first name)">
+            </div>
+            <div class="form-group">
+              <label>Display Order</label>
+              <input type="number" name="display_order" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end; padding-bottom: 0.25rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="featured" style="accent-color: var(--gold);">
+                <span>⭐ Featured (larger card)</span>
+              </label>
+            </div>
+          </div>
+          <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('add-form-wrapper').style.display='none';">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Testimonial</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Testimonials Grid -->
+    <% if (testimonials.length === 0) { %>
+      <div class="dashboard-table-card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-star" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"></i>
+        <p>No testimonials yet. Click "Add Testimonial" above to get started.</p>
+      </div>
+    <% } else { %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem;">
+      <% testimonials.forEach(t => { %>
+      <div class="dashboard-table-card" style="padding: 1.5rem; opacity: <%= t.active ? 1 : 0.5 %>;">
+
+        <!-- Header -->
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=<%= encodeURIComponent(t.avatar_seed || t.name) %>"
+               alt="<%= t.name %>" style="width: 48px; height: 48px; border-radius: 50%;">
+          <div style="flex: 1;">
+            <strong style="font-size: 0.95rem;"><%= t.name %></strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= t.designation %></div>
+          </div>
+          <div style="display: flex; gap: 0.25rem;">
+            <% if (t.featured) { %><span style="font-size: 0.7rem; background: rgba(201,168,76,0.15); color: var(--gold); padding: 2px 6px; border-radius: 20px;">⭐ Featured</span><% } %>
+            <span class="status-badge <%= t.active ? 'status-published' : 'status-rejected' %>" style="font-size: 0.7rem;"><%= t.active ? 'Active' : 'Hidden' %></span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-mid); line-height: 1.6; margin-bottom: 1rem; font-style: italic;">"<%= t.quote %>"</p>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-ghost" style="font-size: 0.75rem; padding: 0.35rem 0.7rem; border-color: var(--border);"
+                  onclick="openEditTestimonial(<%= JSON.stringify(t) %>)">
+            <i class="fa-solid fa-pencil"></i> Edit
+          </button>
+          <form action="/admin/testimonials/<%= t.id %>/toggle" method="POST" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+            <button type="submit" class="btn btn-ghost" style="font-size: 0.75rem; padding: 0.35rem 0.7rem; border-color: var(--border);">
+              <i class="fa-solid fa-eye<%= t.active ? '-slash' : '' %>"></i> <%= t.active ? 'Hide' : 'Show' %>
+            </button>
+          </form>
+          <form action="/admin/testimonials/<%= t.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="<%= t.name %>">
+            <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+            <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: rgba(220,38,38,0.08); color: var(--error); border: 1px solid rgba(220,38,38,0.2);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </main>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-testi-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 550px; width: 95%; max-height: 90vh; overflow-y: auto;">
+    <h3 style="margin-bottom: 1.5rem;">Edit Testimonial</h3>
+    <form id="edit-testi-form" method="POST">
+      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group"><label>Full Name *</label><input type="text" name="name" id="edit-t-name" class="form-control" required></div>
+        <div class="form-group"><label>Designation *</label><input type="text" name="designation" id="edit-t-desig" class="form-control" required></div>
+      </div>
+      <div class="form-group"><label>Quote *</label><textarea name="quote" id="edit-t-quote" class="form-control" rows="4" required></textarea></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group"><label>Avatar Seed</label><input type="text" name="avatar_seed" id="edit-t-seed" class="form-control"></div>
+        <div class="form-group"><label>Display Order</label><input type="number" name="display_order" id="edit-t-order" class="form-control" min="0"></div>
+      </div>
+      <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; cursor: pointer;">
+        <input type="checkbox" name="featured" id="edit-t-featured" style="accent-color: var(--gold);"> ⭐ Featured
+      </label>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button type="button" onclick="document.getElementById('edit-testi-modal').style.display='none'" class="btn btn-ghost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal-overlay" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 400px; width: 90%;">
+    <h3 style="color: var(--error); margin-bottom: 0.5rem;">Delete Testimonial</h3>
+    <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Remove testimonial from "<span id="modal-item-name"></span>"?</p>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button id="modal-cancel-btn" class="btn btn-ghost">Cancel</button>
+      <button id="modal-confirm-delete-btn" class="btn" style="background: var(--error); color: white;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+function openEditTestimonial(t) {
+  document.getElementById('edit-t-name').value = t.name;
+  document.getElementById('edit-t-desig').value = t.designation;
+  document.getElementById('edit-t-quote').value = t.quote;
+  document.getElementById('edit-t-seed').value = t.avatar_seed || '';
+  document.getElementById('edit-t-order').value = t.display_order || 0;
+  document.getElementById('edit-t-featured').checked = t.featured === 1;
+  document.getElementById('edit-testi-form').action = '/admin/testimonials/' + t.id + '/edit';
+  document.getElementById('edit-testi-modal').style.display = 'flex';
+}
+document.getElementById('edit-testi-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+});
+</script>

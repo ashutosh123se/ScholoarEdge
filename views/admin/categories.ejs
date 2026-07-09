@@ -1,0 +1,173 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header">
+      <h1>Manage Categories</h1>
+      <div class="content-header-meta">Create, edit, and organise blog post categories.</div>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: flex-start;">
+
+      <!-- Left: Category Table -->
+      <div class="dashboard-table-card">
+        <div class="card-header-row">
+          <h3>All Categories</h3>
+          <span class="status-badge status-published" style="font-size: 0.75rem;"><%= categories.length %> total</span>
+        </div>
+
+        <% if (categories.length === 0) { %>
+          <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-tags" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <p>No categories yet. Create your first one →</p>
+          </div>
+        <% } else { %>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Posts</th>
+              <th>Order</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% categories.forEach(cat => { %>
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 14px; height: 14px; border-radius: 50%; background: <%= cat.color || '#c9a84c' %>; flex-shrink: 0;"></div>
+                  <div>
+                    <strong><%= cat.name %></strong>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">/blog?category=<%= cat.slug %></div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="status-badge"><%= cat.post_count %> posts</span></td>
+              <td><span style="font-size: 0.85rem;">#<%= cat.display_order %></span></td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button type="button" class="btn btn-ghost" style="font-size: 0.75rem; padding: 0.35rem 0.6rem; border-color: var(--border);"
+                          onclick="openEditModal(<%= JSON.stringify(cat) %>)">
+                    <i class="fa-solid fa-pencil"></i>
+                  </button>
+                  <form action="/admin/categories/<%= cat.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="<%= cat.name %>">
+                    <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                    <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.35rem 0.6rem; background: rgba(220,38,38,0.08); color: var(--error); border: 1px solid rgba(220,38,38,0.2);">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+      </div>
+
+      <!-- Right: Create Form -->
+      <div class="dashboard-table-card">
+        <div class="card-header-row"><h3>Add New Category</h3></div>
+        <form action="/admin/categories" method="POST" style="padding: 0.5rem 0;">
+          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+          <div class="form-group">
+            <label for="cat-name">Category Name *</label>
+            <input type="text" name="name" id="cat-name" class="form-control" placeholder="e.g. Research Methodology" required>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Slug will be auto-generated from the name.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cat-description">Description</label>
+            <textarea name="description" id="cat-description" class="form-control" placeholder="Short description of this category..."></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="cat-color">Colour</label>
+              <input type="color" name="color" id="cat-color" class="form-control" value="#c9a84c" style="padding: 0.25rem; height: 42px;">
+            </div>
+            <div class="form-group">
+              <label for="cat-order">Display Order</label>
+              <input type="number" name="display_order" id="cat-order" class="form-control" value="0" min="0">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fa-solid fa-plus"></i> Create Category
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal-overlay" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 480px; width: 95%;">
+    <h3 style="margin-bottom: 1.5rem;">Edit Category</h3>
+    <form id="edit-cat-form" method="POST">
+      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+      <div class="form-group">
+        <label>Name *</label>
+        <input type="text" name="name" id="edit-name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" id="edit-desc" class="form-control"></textarea>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label>Colour</label>
+          <input type="color" name="color" id="edit-color" class="form-control" style="height:42px;">
+        </div>
+        <div class="form-group">
+          <label>Order</label>
+          <input type="number" name="display_order" id="edit-order" class="form-control" min="0">
+        </div>
+      </div>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+        <button type="button" id="close-edit-modal" class="btn btn-ghost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal-overlay" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 400px; width: 90%;">
+    <h3 style="color: var(--error); margin-bottom: 0.5rem;">Delete Category</h3>
+    <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Delete "<span id="modal-item-name"></span>"? Posts in this category will become uncategorised.</p>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button id="modal-cancel-btn" class="btn btn-ghost">Cancel</button>
+      <button id="modal-confirm-delete-btn" class="btn" style="background: var(--error); color: white;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+function openEditModal(cat) {
+  document.getElementById('edit-name').value = cat.name;
+  document.getElementById('edit-desc').value = cat.description || '';
+  document.getElementById('edit-color').value = cat.color || '#c9a84c';
+  document.getElementById('edit-order').value = cat.display_order || 0;
+  document.getElementById('edit-cat-form').action = '/admin/categories/' + cat.id + '/edit';
+  const overlay = document.getElementById('edit-modal-overlay');
+  overlay.style.display = 'flex';
+}
+document.getElementById('close-edit-modal').addEventListener('click', () => {
+  document.getElementById('edit-modal-overlay').style.display = 'none';
+});
+document.getElementById('edit-modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('edit-modal-overlay').style.display = 'none';
+});
+</script>

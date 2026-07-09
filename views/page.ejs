@@ -1,0 +1,35 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<!-- Legal Page Header -->
+<div style="background: var(--navy); color: var(--cream); padding: 4rem 0 3rem;">
+  <div class="container" style="max-width: 800px;">
+    <nav style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem;">
+      <a href="/" style="color: rgba(255,255,255,0.5); text-decoration: none;">Home</a>
+      <span style="margin: 0 0.5rem;">/</span>
+      <span style="color: var(--gold);"><%= page.title %></span>
+    </nav>
+    <h1 style="font-size: 2rem; margin: 0; color: var(--cream);"><%= page.title %></h1>
+    <p style="color: rgba(255,255,255,0.6); margin-top: 0.75rem; font-size: 0.9rem;">
+      Last updated: <%= new Date(page.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %>
+    </p>
+  </div>
+</div>
+
+<!-- Page Content -->
+<div style="background: var(--white); padding: 4rem 0;">
+  <div class="container" style="max-width: 800px;">
+    <div class="prose" style="line-height: 1.8; color: var(--text-dark);">
+      <%- page.content %>
+    </div>
+
+    <!-- Back Link -->
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+      <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Homepage
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

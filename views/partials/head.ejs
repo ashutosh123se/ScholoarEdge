@@ -4,29 +4,71 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0d1b2a">
-  
-  <!-- Dynamic Meta Description -->
-  <meta name="description" content="<%= typeof settings !== 'undefined' && settings.meta_description ? settings.meta_description : 'Premium academic research assistance and journal publication support.' %>">
-  
-  <title><%= typeof title !== 'undefined' ? title + ' | ' + (typeof settings !== 'undefined' && settings.site_name ? settings.site_name : 'ScholarsEdge') : 'ScholarsEdge - Academic Research & Journal Publication Services' %></title>
-  
-  <!-- Google Fonts: Playfair Display (Serif headings) & DM Sans (Sans-serif body) -->
+
+  <!-- Per-page Meta Description & Title -->
+  <title><%= typeof metaTitle !== 'undefined' && metaTitle ? metaTitle : (typeof title !== 'undefined' ? title + ' | ' + (typeof settings !== 'undefined' && settings.site_name ? settings.site_name : 'ScholarsEdge') : 'ScholarsEdge — Academic Research & Journal Publication Services') %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' && metaDescription ? metaDescription : (typeof settings !== 'undefined' && settings.meta_description ? settings.meta_description : 'Premium academic research assistance and journal publication support.') %>">
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="<%= typeof isArticle !== 'undefined' && isArticle ? 'article' : 'website' %>">
+  <meta property="og:title" content="<%= typeof ogTitle !== 'undefined' && ogTitle ? ogTitle : (typeof metaTitle !== 'undefined' && metaTitle ? metaTitle : 'ScholarsEdge') %>">
+  <meta property="og:description" content="<%= typeof ogDescription !== 'undefined' && ogDescription ? ogDescription : (typeof metaDescription !== 'undefined' && metaDescription ? metaDescription : '') %>">
+  <% if (typeof ogImage !== 'undefined' && ogImage) { %>
+  <meta property="og:image" content="<%= ogImage %>">
+  <% } %>
+  <meta property="og:site_name" content="<%= typeof settings !== 'undefined' && settings.site_name ? settings.site_name : 'ScholarsEdge' %>">
+
+  <!-- Canonical URL -->
+  <% if (typeof canonicalUrl !== 'undefined' && canonicalUrl) { %>
+  <link rel="canonical" href="<%= canonicalUrl %>">
+  <% } %>
+
+  <!-- JSON-LD Structured Data -->
+  <% if (typeof isArticle !== 'undefined' && isArticle && typeof blog !== 'undefined' && blog) { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "<%= (blog.meta_title || blog.title).replace(/"/g, '\\"') %>",
+    "description": "<%= (blog.meta_description || blog.excerpt || '').replace(/"/g, '\\"') %>",
+    "author": { "@type": "Person", "name": "<%= (blog.author_name || 'ScholarsEdge').replace(/"/g, '\\"') %>" },
+    "publisher": { "@type": "Organization", "name": "<%= (typeof settings !== 'undefined' && settings.site_name ? settings.site_name : 'ScholarsEdge') %>", "url": "<%= typeof settings !== 'undefined' && settings.base_url ? settings.base_url : 'https://scholoar-edge.vercel.app' %>" },
+    "datePublished": "<%= blog.published_at ? new Date(blog.published_at).toISOString() : new Date(blog.created_at).toISOString() %>",
+    "dateModified": "<%= new Date(blog.updated_at || blog.created_at).toISOString() %>",
+    "url": "<%= (typeof settings !== 'undefined' && settings.base_url ? settings.base_url : '') %>/blog/<%= blog.slug %>"<% if (blog.cover_image) { %>,
+    "image": "<%= blog.cover_image %>"<% } %>
+  }
+  </script>
+  <% } else { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "<%= typeof settings !== 'undefined' && settings.site_name ? settings.site_name : 'ScholarsEdge' %>",
+    "description": "<%= typeof settings !== 'undefined' && settings.meta_description ? settings.meta_description.replace(/"/g, '\\"') : 'Academic research and journal publication services' %>",
+    "url": "<%= typeof settings !== 'undefined' && settings.base_url ? settings.base_url : 'https://scholoar-edge.vercel.app' %>",
+    "contactPoint": { "@type": "ContactPoint", "telephone": "<%= typeof settings !== 'undefined' && settings.contact_phone ? settings.contact_phone : '' %>", "contactType": "customer support" }
+  }
+  </script>
+  <% } %>
+
+  <!-- Google Fonts: Playfair Display & DM Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
-  
-  <!-- Font Awesome 6 Free Icons CDN -->
+
+  <!-- Font Awesome 6 Free CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  
-  <!-- Global Base Design System Stylesheet -->
+
+  <!-- Global Base Stylesheet -->
   <link rel="stylesheet" href="/css/main.css">
-  
-  <!-- Page Specific Overrides Stylesheet -->
+
+  <!-- Page-specific Stylesheet -->
   <% if (typeof cssFile !== 'undefined' && cssFile !== 'main.css') { %>
     <link rel="stylesheet" href="/css/<%= cssFile %>">
   <% } %>
-  
-  <!-- Optional Quill rich text editor core CSS (for user/admin dashboards containing blog compose views) -->
+
+  <!-- Quill rich-text editor CSS (admin + dashboard pages that use editor) -->
   <% if (typeof cssFile !== 'undefined' && (cssFile === 'dashboard.css' || cssFile === 'admin.css')) { %>
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet">
   <% } %>

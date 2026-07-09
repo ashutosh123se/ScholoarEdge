@@ -1,0 +1,129 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <div class="content-header">
+      <h1>Redirect Manager</h1>
+      <div class="content-header-meta">Create 301/302 redirects. Useful after changing URLs or removing old pages.</div>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: flex-start;">
+
+      <!-- Redirects Table -->
+      <div class="dashboard-table-card">
+        <div class="card-header-row">
+          <h3>Active Redirects</h3>
+          <span class="status-badge"><%= redirects.length %> total</span>
+        </div>
+
+        <% if (redirects.length === 0) { %>
+        <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+          <i class="fa-solid fa-right-left" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.2;"></i>
+          <p>No redirects yet.</p>
+        </div>
+        <% } else { %>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>From Path</th>
+              <th>To URL</th>
+              <th>Type</th>
+              <th>Hits</th>
+              <th>Note</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% redirects.forEach(r => { %>
+            <tr>
+              <td>
+                <code style="font-size: 0.8rem; background: var(--cream); padding: 2px 6px; border-radius: 4px;"><%= r.from_path %></code>
+              </td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <a href="<%= r.to_url %>" target="_blank" style="font-size: 0.82rem; color: var(--navy); word-break: break-all;"><%= r.to_url %></a>
+              </td>
+              <td>
+                <span class="status-badge <%= r.status_code === 301 ? 'status-published' : 'status-draft' %>" style="font-size: 0.7rem;">
+                  <%= r.status_code %>
+                </span>
+              </td>
+              <td><span style="font-size: 0.85rem; color: var(--text-muted);"><%= r.hit_count %></span></td>
+              <td style="font-size: 0.8rem; color: var(--text-muted);"><%= r.note || '—' %></td>
+              <td>
+                <form action="/admin/redirects/<%= r.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="<%= r.from_path %>">
+                  <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+                  <button type="submit" class="btn" style="font-size: 0.72rem; padding: 0.3rem 0.6rem; background: rgba(220,38,38,0.08); color: var(--error); border: 1px solid rgba(220,38,38,0.2);">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+      </div>
+
+      <!-- Create Form -->
+      <div class="dashboard-table-card" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1.5rem;">Add Redirect</h3>
+        <form action="/admin/redirects" method="POST">
+          <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+
+          <div class="form-group">
+            <label>From Path *</label>
+            <input type="text" name="from_path" class="form-control" placeholder="/old-blog-url" required>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Must start with /</div>
+          </div>
+
+          <div class="form-group">
+            <label>To URL *</label>
+            <input type="text" name="to_url" class="form-control" placeholder="/new-url or https://..." required>
+          </div>
+
+          <div class="form-group">
+            <label>Type</label>
+            <select name="status_code" class="form-control" style="background: var(--white);">
+              <option value="301">301 — Permanent (SEO-safe)</option>
+              <option value="302">302 — Temporary</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Note (optional)</label>
+            <input type="text" name="note" class="form-control" placeholder="e.g. Old blog post URL changed">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fa-solid fa-plus"></i> Create Redirect
+          </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(201,168,76,0.08); border-radius: var(--radius); border: 1px solid rgba(201,168,76,0.2);">
+          <p style="font-size: 0.78rem; color: var(--text-mid); line-height: 1.6; margin: 0;">
+            <strong>Tip:</strong> Use <strong>301 (Permanent)</strong> when you've changed a URL and want to pass SEO link equity to the new page. Use <strong>302 (Temporary)</strong> when the old URL will come back.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal-overlay" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 400px; width: 90%;">
+    <h3 style="color: var(--error); margin-bottom: 0.5rem;">Remove Redirect</h3>
+    <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Delete redirect for "<span id="modal-item-name"></span>"?</p>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button id="modal-cancel-btn" class="btn btn-ghost">Cancel</button>
+      <button id="modal-confirm-delete-btn" class="btn" style="background: var(--error); color: white;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

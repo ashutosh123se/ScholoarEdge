@@ -1,0 +1,483 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<div class="admin-container">
+  <%- include('../partials/admin-sidebar') %>
+
+  <main class="admin-content">
+    <!-- Top Bar -->
+    <div class="content-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="/admin/blogs" style="color: var(--text-mid); text-decoration: none; font-size: 0.9rem;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Blogs
+        </a>
+        <div>
+          <h1 style="margin: 0;"><%= blog ? 'Edit Blog Post' : 'Create New Blog Post' %></h1>
+          <div class="content-header-meta"><%= blog ? 'Update content, SEO, and publishing settings.' : 'Compose a new academic article for the blog.' %></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button type="button" id="btn-save-draft" class="btn btn-ghost" style="border-color: var(--border);">
+          <i class="fa-regular fa-floppy-disk"></i> Save Draft
+        </button>
+        <button type="button" id="btn-publish" class="btn btn-secondary">
+          <i class="fa-solid fa-paper-plane"></i> <%= blog ? 'Update Post' : 'Publish' %>
+        </button>
+        <% if (blog) { %>
+        <a href="/blog/<%= blog.slug %>" target="_blank" class="btn" style="background: var(--navy); color: var(--gold); padding: 0.5rem 1rem; border-radius: var(--radius);">
+          <i class="fa-solid fa-eye"></i> Preview
+        </a>
+        <% } %>
+      </div>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <form
+      action="<%= blog ? '/admin/blogs/' + blog.id + '/edit' : '/admin/blogs/create' %>"
+      method="POST"
+      enctype="multipart/form-data"
+      id="compose-form"
+    >
+      <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+      <input type="hidden" name="action" id="action-field" value="publish">
+      <input type="hidden" name="content" id="hidden-content" value="<%= blog ? blog.content.replace(/"/g, '&quot;') : '' %>">
+      <input type="hidden" name="tags" id="hidden-tags" value="<%= blog ? blog.tags : '' %>">
+
+      <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: flex-start;">
+
+        <!-- ── Left: Main Content ──────────────────────────────────── -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+          <!-- Title + Slug -->
+          <div class="dashboard-table-card" style="padding: 1.5rem;">
+            <div class="form-group" style="position: relative; margin-bottom: 1.25rem;">
+              <label for="title" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">Post Title *</label>
+              <input type="text" name="title" id="title" class="form-control" style="font-size: 1.25rem; font-weight: 600; padding: 0.85rem 1rem;"
+                     value="<%= blog ? blog.title : '' %>" placeholder="Enter academic article title..." maxlength="120" required>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Clear, keyword-rich title (max 120 characters)</span>
+                <span id="title-counter" style="font-size: 0.7rem; color: var(--text-muted);">0/120</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="slug-field" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">URL Slug *</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">/blog/</span>
+                <input type="text" name="slug" id="slug-field" class="form-control" style="flex: 1;"
+                       value="<%= blog ? blog.slug : '' %>" placeholder="auto-generated-from-title">
+                <button type="button" id="check-slug-btn" class="btn btn-ghost" style="white-space: nowrap; padding: 0.5rem 0.85rem; font-size: 0.8rem; border-color: var(--border);">
+                  <i class="fa-solid fa-circle-check"></i> Check
+                </button>
+              </div>
+              <div id="slug-status" style="font-size: 0.75rem; margin-top: 0.3rem;"></div>
+            </div>
+          </div>
+
+          <!-- Excerpt -->
+          <div class="dashboard-table-card" style="padding: 1.5rem;">
+            <div class="form-group" style="margin-bottom: 0; position: relative;">
+              <label for="excerpt" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">Excerpt / Summary</label>
+              <textarea name="excerpt" id="excerpt" class="form-control" style="min-height: 80px;" maxlength="300"
+                        placeholder="Short summary for blog cards and search previews (max 300 chars)..."><%= blog ? blog.excerpt || '' : '' %></textarea>
+              <div style="display: flex; justify-content: flex-end;"><span id="excerpt-counter" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">0/300</span></div>
+            </div>
+          </div>
+
+          <!-- Rich Text Editor -->
+          <div class="dashboard-table-card" style="padding: 1.5rem;">
+            <label style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem;">Post Content *</label>
+            <div id="compose-editor" style="min-height: 400px;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(13,27,42,0.05);">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Words: <strong id="word-count">0</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Est. reading time: <strong id="read-time">1</strong> min</span>
+            </div>
+          </div>
+
+          <!-- SEO Panel -->
+          <div class="dashboard-table-card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+              <i class="fa-solid fa-magnifying-glass" style="color: var(--gold);"></i> SEO Settings
+              <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-muted); background: rgba(201,168,76,0.1); padding: 2px 8px; border-radius: 20px;">Required before publishing</span>
+            </h3>
+
+            <div class="form-group" style="position: relative;">
+              <label for="meta_title">Meta Title <span style="color: var(--error);">*</span></label>
+              <input type="text" name="meta_title" id="meta_title" class="form-control" maxlength="70"
+                     value="<%= blog && blog.meta_title ? blog.meta_title : '' %>"
+                     placeholder="SEO title (50–60 chars recommended)">
+              <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                <span id="meta-title-hint" style="font-size: 0.7rem; color: var(--text-muted);"></span>
+                <span id="meta-title-counter" style="font-size: 0.7rem; color: var(--text-muted);">0/70</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="position: relative;">
+              <label for="meta_description">Meta Description <span style="color: var(--error);">*</span></label>
+              <textarea name="meta_description" id="meta_description" class="form-control" maxlength="170"
+                        placeholder="Search snippet description (150–160 chars recommended)..."><%= blog && blog.meta_description ? blog.meta_description : '' %></textarea>
+              <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                <span id="meta-desc-hint" style="font-size: 0.7rem; color: var(--text-muted);"></span>
+                <span id="meta-desc-counter" style="font-size: 0.7rem; color: var(--text-muted);">0/170</span>
+              </div>
+              <div id="meta-dup-warning" style="display: none; font-size: 0.75rem; color: var(--error); margin-top: 4px; padding: 0.4rem 0.6rem; background: rgba(220,38,38,0.05); border-radius: 4px; border-left: 3px solid var(--error);"></div>
+            </div>
+
+            <details style="margin-top: 0.5rem;">
+              <summary style="cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); padding: 0.5rem 0;">
+                <i class="fa-brands fa-square-facebook"></i> Open Graph / Social Share Settings
+              </summary>
+              <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="og_title">OG Title</label>
+                  <input type="text" name="og_title" id="og_title" class="form-control" maxlength="90"
+                         value="<%= blog && blog.og_title ? blog.og_title : '' %>"
+                         placeholder="Defaults to meta title if blank">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="og_description">OG Description</label>
+                  <textarea name="og_description" id="og_description" class="form-control" maxlength="200"
+                            placeholder="Defaults to meta description if blank"><%= blog && blog.og_description ? blog.og_description : '' %></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="og_image">OG Image URL</label>
+                  <input type="url" name="og_image" id="og_image" class="form-control"
+                         value="<%= blog && blog.og_image ? blog.og_image : '' %>"
+                         placeholder="https://... or leave blank to use cover image">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="canonical_url">Canonical URL</label>
+                  <input type="url" name="canonical_url" id="canonical_url" class="form-control"
+                         value="<%= blog && blog.canonical_url ? blog.canonical_url : '' %>"
+                         placeholder="Auto-set if blank">
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- ── Right: Settings Sidebar ────────────────────────────── -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; position: sticky; top: 80px;">
+
+          <!-- Status -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Publishing Status</h4>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <select name="status" id="status-select" class="form-control" style="background: var(--white);">
+                <option value="draft"     <%= (!blog || blog.status === 'draft')     ? 'selected' : '' %>>📝 Draft</option>
+                <option value="published" <%= (blog && blog.status === 'published')  ? 'selected' : '' %>>✅ Published</option>
+                <option value="pending"   <%= (blog && blog.status === 'pending')    ? 'selected' : '' %>>⏳ Pending Review</option>
+                <option value="scheduled" <%= (blog && blog.status === 'scheduled')  ? 'selected' : '' %>>📅 Scheduled</option>
+              </select>
+            </div>
+            <div id="scheduled-at-wrapper" style="display: <%= (blog && blog.status === 'scheduled') ? 'block' : 'none' %>;">
+              <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Publish Date & Time</label>
+              <input type="datetime-local" name="scheduled_at" class="form-control"
+                     value="<%= blog && blog.scheduled_at ? blog.scheduled_at.slice(0,16) : '' %>">
+            </div>
+          </div>
+
+          <!-- Author -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Author</h4>
+            <select name="author_id" class="form-control" style="background: var(--white);">
+              <% authors.forEach(a => { %>
+                <option value="<%= a.id %>" <%= (blog && blog.user_id === a.id) || (!blog && a.id === user.id) ? 'selected' : '' %>>
+                  <%= a.name %><%= a.designation ? ' — ' + a.designation : '' %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Category</h4>
+            <select name="category_id" class="form-control" style="background: var(--white);">
+              <option value="">— Select Category —</option>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>" <%= (blog && blog.category_id === cat.id) ? 'selected' : '' %>><%= cat.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Reading Time -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Reading Time</h4>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="number" name="reading_time" id="reading-time-input" class="form-control" min="1" max="120"
+                     value="<%= blog ? blog.reading_time : 1 %>" style="width: 80px;">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">min (auto-calc)</span>
+            </div>
+          </div>
+
+          <!-- Cover Image -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Cover Image</h4>
+            <% if (blog && blog.cover_image) { %>
+              <img src="<%= blog.cover_image %>" alt="Current cover" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 0.75rem;">
+            <% } %>
+            <input type="file" name="cover_image" id="cover-image-input" accept="image/*" style="display: none;">
+            <div id="cover-upload-zone" class="upload-zone" style="cursor: pointer;">
+              <i class="fa-regular fa-image"></i>
+              <p><%= blog && blog.cover_image ? 'Click to replace image' : 'Click to upload cover image' %></p>
+              <p style="font-size: 0.65rem; color: var(--text-muted);">JPEG, PNG, WEBP — max 5MB</p>
+            </div>
+            <div class="form-group" style="margin-top: 0.75rem; margin-bottom: 0;">
+              <input type="text" name="cover_image_alt" class="form-control" style="font-size: 0.8rem;"
+                     placeholder="Image alt text (required for SEO)"
+                     value="<%= blog && blog.cover_image_alt ? blog.cover_image_alt : '' %>">
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Tags</h4>
+            <div class="tags-input-container" id="tags-display">
+              <input type="text" id="tags-input-field" placeholder="Type tag & press Enter..." style="border: none; outline: none; font-size: 0.85rem; flex: 1; min-width: 120px; background: transparent;">
+            </div>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 6px;">Press Enter or comma to add tags.</p>
+          </div>
+
+          <!-- Options -->
+          <div class="editor-widget">
+            <h4 style="margin-bottom: 1rem;">Options</h4>
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; margin-bottom: 0.6rem;">
+              <input type="checkbox" name="featured" id="featured-chk" style="accent-color: var(--gold);"
+                     <%= (blog && blog.featured) ? 'checked' : '' %>>
+              <span style="font-size: 0.85rem;">⭐ Featured post</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+              <input type="checkbox" name="allow_comments" id="comments-chk" style="accent-color: var(--navy);"
+                     <%= (!blog || blog.allow_comments) ? 'checked' : '' %>>
+              <span style="font-size: 0.85rem;">💬 Allow comments</span>
+            </label>
+          </div>
+
+          <% if (blog) { %>
+          <!-- Danger Zone -->
+          <div class="editor-widget" style="border-color: rgba(220,38,38,0.2); background: rgba(220,38,38,0.02);">
+            <h4 style="color: var(--error); margin-bottom: 1rem;">Danger Zone</h4>
+            <form action="/admin/blogs/<%= blog.id %>/duplicate" method="POST" style="margin-bottom: 0.75rem;">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn btn-ghost" style="width: 100%; font-size: 0.8rem; border-color: var(--border);">
+                <i class="fa-regular fa-copy"></i> Duplicate as Draft
+              </button>
+            </form>
+            <form action="/admin/blogs/<%= blog.id %>/delete" method="POST" class="confirm-delete-form" data-item-name="<%= blog.title %>">
+              <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
+              <button type="submit" class="btn" style="width: 100%; font-size: 0.8rem; background: rgba(220,38,38,0.1); color: var(--error); border: 1px solid rgba(220,38,38,0.3);">
+                <i class="fa-solid fa-trash"></i> Delete Post
+              </button>
+            </form>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal-overlay" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: 2rem; max-width: 400px; width: 90%;">
+    <h3 style="margin-bottom: 0.5rem; color: var(--error);">⚠️ Delete Post</h3>
+    <p style="color: var(--text-mid); margin-bottom: 1.5rem;">Are you sure you want to permanently delete "<span id="modal-item-name"></span>"? This cannot be undone.</p>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button id="modal-cancel-btn" class="btn btn-ghost">Cancel</button>
+      <button id="modal-confirm-delete-btn" class="btn" style="background: var(--error); color: white;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const blogId = '<%= blog ? blog.id : '' %>';
+
+  // ── Quill Editor ──────────────────────────────────────────────────
+  const quill = new Quill('#compose-editor', {
+    theme: 'snow',
+    placeholder: 'Write your academic article content here...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, 4, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        [{ 'align': [] }],
+        ['clean']
+      ]
+    }
+  });
+
+  // Set initial content for edit mode
+  const initialContent = document.getElementById('hidden-content').value;
+  if (initialContent) {
+    quill.clipboard.dangerouslyPasteHTML(initialContent.replace(/&quot;/g, '"'));
+  }
+
+  // Sync content & reading time on change
+  quill.on('text-change', () => {
+    const html = quill.root.innerHTML;
+    document.getElementById('hidden-content').value = html;
+    const text = quill.root.innerText.trim();
+    const words = text.split(/\s+/).filter(Boolean);
+    document.getElementById('word-count').textContent = words.length;
+    const rt = Math.ceil(words.length / 200) || 1;
+    document.getElementById('read-time').textContent = rt;
+    document.getElementById('reading-time-input').value = rt;
+  });
+
+  // ── Title counter + slug auto-gen ─────────────────────────────────
+  const titleInput  = document.getElementById('title');
+  const slugField   = document.getElementById('slug-field');
+  const titleCounter = document.getElementById('title-counter');
+  let slugEdited = '<%= blog ? "true" : "false" %>' === 'true';
+
+  titleInput.addEventListener('input', () => {
+    titleCounter.textContent = titleInput.value.length + '/120';
+    if (!slugEdited) {
+      const auto = titleInput.value.toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80);
+      slugField.value = auto;
+      document.getElementById('slug-status').textContent = '';
+    }
+  });
+
+  slugField.addEventListener('input', () => { slugEdited = true; document.getElementById('slug-status').textContent = ''; });
+
+  // ── Slug check ────────────────────────────────────────────────────
+  document.getElementById('check-slug-btn').addEventListener('click', async () => {
+    const slug = slugField.value.trim();
+    if (!slug) return;
+    try {
+      const res = await fetch(`/admin/api/check-slug?slug=${encodeURIComponent(slug)}&excludeId=${blogId}`);
+      const data = await res.json();
+      const el = document.getElementById('slug-status');
+      slugField.value = data.slug;
+      el.textContent = data.available ? '✅ Slug is available!' : '❌ Slug already taken — please choose another.';
+      el.style.color = data.available ? 'var(--success)' : 'var(--error)';
+    } catch(e) {}
+  });
+
+  // ── Excerpt counter ───────────────────────────────────────────────
+  const excerptEl = document.getElementById('excerpt');
+  excerptEl.addEventListener('input', () => { document.getElementById('excerpt-counter').textContent = excerptEl.value.length + '/300'; });
+  document.getElementById('excerpt-counter').textContent = excerptEl.value.length + '/300';
+
+  // ── Meta title counter + hints ────────────────────────────────────
+  const metaTitleEl = document.getElementById('meta_title');
+  const mtCounter   = document.getElementById('meta-title-counter');
+  const mtHint      = document.getElementById('meta-title-hint');
+  const checkMetaTitle = () => {
+    const len = metaTitleEl.value.length;
+    mtCounter.textContent = `${len}/70`;
+    if (len < 30) { mtHint.textContent = '⚠️ Too short (aim for 50–60)'; mtHint.style.color = 'var(--warning)'; }
+    else if (len <= 60) { mtHint.textContent = '✅ Good length'; mtHint.style.color = 'var(--success)'; }
+    else if (len <= 70) { mtHint.textContent = '⚠️ Getting long (60 char ideal)'; mtHint.style.color = 'var(--warning)'; }
+    else { mtHint.textContent = '❌ Too long — may be truncated'; mtHint.style.color = 'var(--error)'; }
+  };
+  metaTitleEl.addEventListener('input', checkMetaTitle);
+  checkMetaTitle();
+
+  // ── Meta desc counter + hints + duplicate check ───────────────────
+  const metaDescEl = document.getElementById('meta_description');
+  const mdCounter  = document.getElementById('meta-desc-counter');
+  const mdHint     = document.getElementById('meta-desc-hint');
+  let dupCheckTimer;
+  const checkMetaDesc = () => {
+    const len = metaDescEl.value.length;
+    mdCounter.textContent = `${len}/170`;
+    if (len < 50) { mdHint.textContent = '⚠️ Too short (aim for 150–160)'; mdHint.style.color = 'var(--warning)'; }
+    else if (len <= 160) { mdHint.textContent = '✅ Good length'; mdHint.style.color = 'var(--success)'; }
+    else { mdHint.textContent = '⚠️ May be truncated in search results'; mdHint.style.color = 'var(--warning)'; }
+    // Debounced duplicate check
+    clearTimeout(dupCheckTimer);
+    dupCheckTimer = setTimeout(async () => {
+      const val = metaDescEl.value.trim();
+      if (val.length < 20) return;
+      try {
+        const res = await fetch(`/admin/api/check-meta?field=meta_description&value=${encodeURIComponent(val)}&excludeId=${blogId}`);
+        const data = await res.json();
+        const warn = document.getElementById('meta-dup-warning');
+        if (data.duplicates && data.duplicates.length > 0) {
+          warn.style.display = 'block';
+          warn.textContent = `⚠️ Duplicate meta description found on: "${data.duplicates[0].title}" — please use a unique description.`;
+        } else { warn.style.display = 'none'; }
+      } catch(e) {}
+    }, 800);
+  };
+  metaDescEl.addEventListener('input', checkMetaDesc);
+  checkMetaDesc();
+
+  // ── Tags input ────────────────────────────────────────────────────
+  const hiddenTags = document.getElementById('hidden-tags');
+  const tagsDisplay = document.getElementById('tags-display');
+  const tagsInput = document.getElementById('tags-input-field');
+  let tagList = hiddenTags.value ? hiddenTags.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  const renderTags = () => {
+    tagsDisplay.querySelectorAll('.tag-pill').forEach(el => el.remove());
+    tagList.forEach(tag => {
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill';
+      pill.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; background: var(--navy); color: var(--cream); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; margin: 2px;';
+      pill.innerHTML = `${tag} <button type="button" onclick="this.parentElement.remove(); updateTags();" style="background:none; border:none; color: var(--cream-dark); cursor:pointer; padding: 0; font-size: 0.9rem; line-height: 1;">×</button>`;
+      tagsDisplay.insertBefore(pill, tagsInput);
+    });
+    hiddenTags.value = tagList.join(',');
+  };
+  window.updateTags = () => { tagList = Array.from(tagsDisplay.querySelectorAll('.tag-pill')).map(el => el.textContent.replace('×','').trim()); hiddenTags.value = tagList.join(','); };
+  tagsInput.addEventListener('keydown', e => {
+    if (['Enter', ','].includes(e.key) && tagsInput.value.trim()) {
+      e.preventDefault();
+      const tag = tagsInput.value.trim().replace(',','');
+      if (tag && !tagList.includes(tag)) { tagList.push(tag); renderTags(); }
+      tagsInput.value = '';
+    }
+  });
+  renderTags();
+
+  // ── Cover upload zone ─────────────────────────────────────────────
+  document.getElementById('cover-upload-zone').addEventListener('click', () => document.getElementById('cover-image-input').click());
+  document.getElementById('cover-image-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const zone = document.getElementById('cover-upload-zone');
+        zone.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:120px; object-fit:cover; border-radius:6px;"><p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">Click to change</p>`;
+        zone.addEventListener('click', () => document.getElementById('cover-image-input').click());
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ── Scheduled at toggle ───────────────────────────────────────────
+  document.getElementById('status-select').addEventListener('change', (e) => {
+    document.getElementById('scheduled-at-wrapper').style.display = e.target.value === 'scheduled' ? 'block' : 'none';
+  });
+
+  // ── Form submission buttons ───────────────────────────────────────
+  document.getElementById('btn-save-draft').addEventListener('click', () => {
+    document.getElementById('action-field').value = 'draft';
+    document.getElementById('status-select').value = 'draft';
+    if (document.getElementById('compose-form').reportValidity()) document.getElementById('compose-form').submit();
+  });
+  document.getElementById('btn-publish').addEventListener('click', () => {
+    document.getElementById('action-field').value = 'publish';
+    if (!metaTitleEl.value.trim() || !metaDescEl.value.trim()) {
+      alert('Please fill in the SEO Meta Title and Meta Description before publishing.');
+      metaTitleEl.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    if (document.getElementById('compose-form').reportValidity()) document.getElementById('compose-form').submit();
+  });
+
+  // Initial title counter
+  titleCounter.textContent = titleInput.value.length + '/120';
+});
+</script>

@@ -7,11 +7,14 @@
 
   <!-- Main Content -->
   <main class="admin-content">
-    <div class="content-header">
+    <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
       <div>
-        <h1>Content Moderation Queue</h1>
-        <div class="content-header-meta">Verify research article drafts, manage reviewer comments, and feature publications.</div>
+        <h1>Blog Management</h1>
+        <div class="content-header-meta">Create, review, publish, and moderate all blog posts and comments.</div>
       </div>
+      <a href="/admin/blogs/create" class="btn btn-primary">
+        <i class="fa-solid fa-circle-plus"></i> New Blog Post
+      </a>
     </div>
 
     <!-- Notification Toast Alerts -->
@@ -177,6 +180,7 @@
                     <td style="text-align: right;">
                       <div class="action-buttons-cell" style="justify-content: flex-end;">
                         <a href="/admin/blogs/<%= blog.id %>" class="btn-admin-action btn-view" title="Preview details"><i class="fa-solid fa-eye"></i> View</a>
+                        <a href="/admin/blogs/<%= blog.id %>/edit" class="btn-admin-action btn-approve" title="Edit Post" style="background: rgba(13,27,42,0.08); color: var(--navy);"><i class="fa-solid fa-pencil"></i></a>
                         
                         <% if (blog.status === 'pending') { %>
                           <!-- Quick Approve -->
